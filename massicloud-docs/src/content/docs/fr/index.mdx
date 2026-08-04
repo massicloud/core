@@ -1,0 +1,43 @@
+---
+title: Documentation MassiCloud
+description: La plateforme développeur souveraine pour l'Algérie. Postgres, stockage, auth — tout conforme au droit algérien.
+template: splash
+hero:
+  tagline: La plateforme développeur souveraine pour l'Algérie. Postgres, stockage et conformité — construits selon la loi algérienne.
+  image:
+    file: ../../../assets/logo-dark.svg
+  actions:
+    - text: Démarrer
+      link: /fr/get-started/welcome
+      icon: right-arrow
+      variant: primary
+    - text: Ouvrir le portail
+      link: https://app.massicloud.dz
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+## Qu'est-ce que MassiCloud ?
+
+MassiCloud est un Backend-as-a-Service souverain conçu pour les entreprises et développeurs algériens. Postgres managé, stockage compatible S3, et un système d'authentification complet — fonctionnant entièrement sur le sol algérien, conforme aux lois 18-07 et 25-11.
+
+<CardGrid>
+  <Card title="Démarrer en 10 minutes" icon="rocket">
+    Créez votre compte, votre projet, et effectuez votre premier appel API.
+    [Commencer le tutoriel →](/fr/get-started/welcome)
+  </Card>
+  <Card title="Utiliser le SDK JavaScript" icon="seti:javascript">
+    Installez `@massicloud/client` et commencez à construire.
+    [Lire la doc SDK →](/fr/sdk/javascript/overview)
+  </Card>
+  <Card title="Comprendre la plateforme" icon="information">
+    Projets, bases de données, RLS, souveraineté — le modèle MassiCloud.
+    [Explorer les concepts →](/fr/concepts/overview)
+  </Card>
+  <Card title="La souveraineté, c'est important" icon="shield">
+    Les données restent en Algérie, conformément aux lois 18-07 et 25-11.
+    [Pourquoi MassiCloud →](/fr/concepts/sovereignty)
+  </Card>
+</CardGrid>

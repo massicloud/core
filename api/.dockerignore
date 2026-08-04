@@ -1,0 +1,4 @@
+massicloud-api
+data/
+.env
+*.log

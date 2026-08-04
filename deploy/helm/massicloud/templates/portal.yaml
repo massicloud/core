@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: massicloud-portal
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.portal.replicas }}
+  selector:
+    matchLabels:
+      app: massicloud-portal
+  template:
+    metadata:
+      labels:
+        app: massicloud-portal
+    spec:
+      containers:
+      - name: portal
+        image: "{{ .Values.images.portal.repository }}:{{ .Values.images.portal.tag }}"
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://api.{{ .Values.domain.base }}"
+        - name: NEXT_PUBLIC_LANDING_URL
+          value: "https://{{ .Values.domain.base }}"
+        - name: NEXT_PUBLIC_DOCS_URL
+          value: "https://docs.{{ .Values.domain.base }}"
+        resources:
+{{ toYaml .Values.portal.resources | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: massicloud-portal
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: massicloud-portal
+  ports:
+  - port: 3000
+    targetPort: 3000

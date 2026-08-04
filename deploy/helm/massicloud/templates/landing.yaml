@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: massicloud-landing
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.landing.replicas }}
+  selector:
+    matchLabels:
+      app: massicloud-landing
+  template:
+    metadata:
+      labels:
+        app: massicloud-landing
+    spec:
+      containers:
+      - name: landing
+        image: "{{ .Values.images.landing.repository }}:{{ .Values.images.landing.tag }}"
+        # landing's Dockerfile sets ENV PORT=3030 / EXPOSE 3030 (next start -p 3030) —
+        # unlike portal, it does not listen on 3000.
+        ports:
+        - containerPort: 3030
+        env:
+        - name: NEXT_PUBLIC_APP_URL
+          value: "https://app.{{ .Values.domain.base }}"
+        - name: NEXT_PUBLIC_DOCS_URL
+          value: "https://docs.{{ .Values.domain.base }}"
+        resources:
+{{ toYaml .Values.landing.resources | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3030
+          initialDelaySeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: massicloud-landing
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: massicloud-landing
+  ports:
+  - port: 3030
+    targetPort: 3030

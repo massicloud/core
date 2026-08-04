@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: massicloud-api
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: massicloud-api-tenant-provisioner
+rules:
+- apiGroups: [""]
+  resources: [namespaces, services, secrets, configmaps, persistentvolumeclaims, resourcequotas]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: [statefulsets, deployments]
+  verbs: ["*"]
+- apiGroups: ["networking.k8s.io"]
+  resources: [networkpolicies]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: massicloud-api-tenant-provisioner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: massicloud-api-tenant-provisioner
+subjects:
+- kind: ServiceAccount
+  name: massicloud-api
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: massicloud-api-config
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  JWT_SECRET: {{ .Values.api.jwtSecret | quote }}
+  REGISTER_SECRET: {{ .Values.api.registerSecret | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: massicloud-api
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: massicloud-api
+  template:
+    metadata:
+      labels:
+        app: massicloud-api
+    spec:
+      serviceAccountName: massicloud-api
+      containers:
+      - name: api
+        image: "{{ .Values.images.api.repository }}:{{ .Values.images.api.tag }}"
+        imagePullPolicy: {{ .Values.images.api.pullPolicy }}
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: platform-postgres-creds
+        - secretRef:
+            name: massicloud-api-config
+        - secretRef:
+            name: minio-creds
+        env:
+        - name: DOMAIN_SUFFIX
+          value: {{ .Values.domain.base | quote }}
+        - name: STORAGE_CLASS
+          value: {{ .Values.storageClass | quote }}
+        - name: TOKEN_EXPIRY_HOURS
+          value: {{ .Values.api.tokenExpiryHours | quote }}
+        - name: PUBLIC_HOST
+          value: "api.{{ .Values.domain.base }}"
+        # MinIO is reached over the in-cluster Service, not localhost.
+        - name: MINIO_ENDPOINT
+          value: "minio:9000"
+        - name: MINIO_USE_SSL
+          value: "false"
+        # Backing-service images for tenant provisioning.
+        - name: POSTGRES_IMAGE
+          value: {{ .Values.backingImages.postgres | quote }}
+        - name: MYSQL_IMAGE
+          value: {{ .Values.backingImages.mysql | quote }}
+        - name: REDIS_IMAGE
+          value: {{ .Values.backingImages.redis | quote }}
+        - name: POSTGREST_IMAGE
+          value: {{ .Values.backingImages.postgrest | quote }}
+        - name: MYSQL_REST_IMAGE
+          value: "{{ .Values.images.mysqlRest.repository }}:{{ .Values.images.mysqlRest.tag }}"
+        resources:
+{{ toYaml .Values.api.resources | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: massicloud-api
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: massicloud-api
+  ports:
+  - port: 8080
+    targetPort: 8080

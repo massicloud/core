@@ -1,0 +1,43 @@
+---
+title: توثيق MassiCloud
+description: منصة المطورين السيادية للجزائر. Postgres والتخزين والمصادقة — مبنية وفق القانون الجزائري.
+template: splash
+hero:
+  tagline: منصة المطورين السيادية للجزائر. Postgres والتخزين والامتثال — مبنية وفق القانون الجزائري.
+  image:
+    file: ../../../assets/logo-dark.svg
+  actions:
+    - text: ابدأ الآن
+      link: /ar/get-started/welcome
+      icon: right-arrow
+      variant: primary
+    - text: افتح البوابة
+      link: https://app.massicloud.dz
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+## ما هو MassiCloud؟
+
+MassiCloud هو منصة Backend-as-a-Service سيادية مبنية للمطورين والشركات الجزائرية. Postgres مُدار، تخزين متوافق مع S3، ونظام مصادقة متكامل — يعمل بالكامل على الأراضي الجزائرية، ومتوافق مع القانونين 18-07 و25-11.
+
+<CardGrid>
+  <Card title="ابدأ في 10 دقائق" icon="rocket">
+    أنشئ حسابك ومشروعك وأجرِ أول استدعاء API.
+    [ابدأ الدرس التعليمي ←](/ar/get-started/welcome)
+  </Card>
+  <Card title="استخدام SDK JavaScript" icon="seti:javascript">
+    ثبّت `@massicloud/client` وابدأ البناء.
+    [اقرأ توثيق SDK ←](/ar/sdk/javascript/overview)
+  </Card>
+  <Card title="افهم المنصة" icon="information">
+    المشاريع، قواعد البيانات، RLS، السيادة — النموذج الكامن وراء MassiCloud.
+    [استكشف المفاهيم ←](/ar/concepts/overview)
+  </Card>
+  <Card title="السيادة مهمة" icon="shield">
+    تبقى البيانات في الجزائر، متوافقة تمامًا مع القانونين 18-07 و25-11.
+    [لماذا MassiCloud ←](/ar/concepts/sovereignty)
+  </Card>
+</CardGrid>

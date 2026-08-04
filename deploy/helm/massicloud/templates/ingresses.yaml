@@ -1,0 +1,144 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landing
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+  - hosts:
+    - {{ .Values.domain.base }}
+    secretName: landing-tls
+  rules:
+  - host: {{ .Values.domain.base }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: massicloud-landing
+            port:
+              number: 3030
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portal
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+  - hosts:
+    - app.{{ .Values.domain.base }}
+    secretName: portal-tls
+  rules:
+  - host: app.{{ .Values.domain.base }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: massicloud-portal
+            port:
+              number: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docs
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+  - hosts:
+    - docs.{{ .Values.domain.base }}
+    secretName: docs-tls
+  rules:
+  - host: docs.{{ .Values.domain.base }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: massicloud-docs
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-api-cors@kubernetescrd
+    # Tenant provisioning (e.g. creating a MySQL instance) can legitimately
+    # hold a request open for a few minutes — make sure Traefik doesn't cut
+    # it off before the API's own 5-minute handler timeout does.
+    traefik.ingress.kubernetes.io/service.serverstransport: {{ .Release.Namespace }}-api-long-timeout@kubernetescrd
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+  - hosts:
+    - api.{{ .Values.domain.base }}
+    secretName: api-tls
+  rules:
+  - host: api.{{ .Values.domain.base }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: massicloud-api
+            port:
+              number: 8080
+---
+# Generous forwarding timeouts for the API backend — provisioning routes can
+# run for minutes (see api.yaml's 5-minute CreateStage/AddInstanceToStage
+# timeout). Traefik's own defaults are unlimited, but this makes it explicit
+# rather than relying on a default that could differ across Traefik versions.
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: api-long-timeout
+  namespace: {{ .Release.Namespace }}
+spec:
+  forwardingTimeouts:
+    dialTimeout: 30s
+    responseHeaderTimeout: 300s
+    idleConnTimeout: 300s
+---
+# Traefik CORS middleware for the API
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: api-cors
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    accessControlAllowOriginList:
+      - https://app.{{ .Values.domain.base }}
+    accessControlAllowHeaders:
+      - Content-Type
+      - Authorization
+      - X-MassiCloud-Key
+      - Prefer
+    accessControlAllowCredentials: true
+    accessControlMaxAge: 86400

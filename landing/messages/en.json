@@ -1,0 +1,719 @@
+{
+  "nav": {
+    "platform": "Platform",
+    "pricing": "Pricing",
+    "compliance": "Compliance",
+    "roadmap": "Roadmap",
+    "login": "Sign in",
+    "signup": "Get started",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mobileTitle": "Launch sovereign infrastructure",
+    "mobileDescription": "Explore the platform, pricing, compliance posture, and roadmap from one place."
+  },
+  "footer": {
+    "product": "Product",
+    "resources": "Resources",
+    "company": "Company",
+    "platform": "Platform",
+    "overview": "Overview",
+    "pricing": "Pricing",
+    "compliance": "Compliance",
+    "roadmap": "Roadmap",
+    "login": "Sign in",
+    "signup": "Get started",
+    "docs": "Documentation",
+    "lawReadiness": "Law readiness",
+    "projectState": "Project status",
+    "repository": "Public repository",
+    "tagline": "The sovereign developer platform for Algeria. Managed databases, storage, and compliance-first infrastructure hosted under Algerian jurisdiction.",
+    "hostedInAlgeria": "Data stored in Algeria",
+    "founderLabel": "Founder",
+    "founderName": "Amine Kessar",
+    "jurisdictionLabel": "Jurisdiction",
+    "jurisdictionValue": "Algeria only",
+    "allRightsReserved": "All rights reserved.",
+    "madeIn": "Built in"
+  },
+  "home": {
+    "badge": "Algerian sovereign cloud",
+    "hero": {
+      "title": "The sovereign developer platform for Algeria",
+      "subtitle": "A sovereign application platform that combines Infrastructure sovereignty with BaaS developer experience for Algerian companies and founders.",
+      "description": "Managed Postgres, MySQL, Redis, S3-compatible object storage, authentication, compliance tooling, and a control plane that abstracts Kubernetes complexity (service roles, tenancy boundaries, and operations) so customer data stays on Algerian soil and under Algerian law.",
+      "primaryCta": "Get started",
+      "secondaryCta": "Explore the platform"
+    },
+    "stats": {
+      "phases": {
+        "label": "Phases completed",
+        "value": "8 / 10",
+        "description": "The core control plane, authentication, object storage, compliance schemas, backups, restore, and data workflows are already shipped."
+      },
+      "services": {
+        "label": "Services live now",
+        "value": "6 / 18",
+        "description": "Managed Postgres, MySQL, Redis, S3-compatible storage, authentication, and compliance setup are all active today."
+      },
+      "compliance": {
+        "label": "Compliance & Audit",
+        "value": "Live",
+        "description": "Full compliance schema, AUDIT schema/trail, consent records, breach logs, and personal-data registry are implemented and active."
+      }
+    },
+    "previewPanel": {
+      "label": "Live platform preview",
+      "title": "One control plane, multiple managed services",
+      "status": "Live",
+      "postgres": {
+        "title": "Managed Postgres",
+        "description": "Database explorer, SQL editor, schema tools, backups, restore, export, and import.",
+        "status": "Available"
+      },
+      "mysql": {
+        "title": "Managed MySQL",
+        "description": "MySQL 8.4 with REST CRUD and a SQL console, running as a first-class option alongside Postgres.",
+        "status": "Available"
+      },
+      "redis": {
+        "title": "Managed Redis",
+        "description": "Project-scoped cache instances with tenant isolation and control-plane lifecycle management.",
+        "status": "Available"
+      },
+      "storage": {
+        "title": "Object storage",
+        "description": "S3-compatible buckets, uploads, downloads, browsing, and presigned URLs with expirations.",
+        "status": "Available"
+      },
+      "footerLabel": "Why it matters",
+      "footerValue": "MassiCloud gives Algerian teams modern BaaS workflows without routing sensitive data through foreign clouds."
+    },
+    "pillars": {
+      "eyebrow": "Why MassiCloud",
+      "title": "Three pillars shape the product",
+      "subtitle": "MassiCloud is not just another VPS host. It is an opinionated platform designed around legal sovereignty, fast shipping, and operational clarity.",
+      "items": {
+        "sovereignty": {
+          "title": "Sovereignty by architecture",
+          "description": "Tenant data is intended to stay in Algerian datacenters, on Algerian-owned infrastructure, and inside Algerian legal jurisdiction from day one."
+        },
+        "developerExperience": {
+          "title": "Developer experience first",
+          "description": "A modern portal, visual database tooling, instant provisioning flows, and integrated services reduce the friction of building modern apps."
+        },
+        "compliance": {
+          "title": "Compliance built in",
+          "description": "Law 18-07 and 25-11 requirements influence schemas, audit trails, retention, consent handling, and breach workflows instead of being added later."
+        }
+      }
+    },
+    "preview": {
+      "eyebrow": "Product preview",
+      "title": "The first release already covers the developer essentials",
+      "subtitle": "The current platform brings together the foundational services that Algerian product teams need to move away from raw infrastructure and foreign-hosted backends.",
+      "callout": {
+        "label": "What is different",
+        "title": "A sovereign backend platform instead of scattered infrastructure",
+        "description": "Instead of stitching together overseas managed services, MassiCloud centralizes provisioning, operations, compliance, and tenant isolation in a single developer workflow."
+      },
+      "cards": {
+        "postgres": {
+          "title": "Managed Postgres",
+          "description": "Provision database instances with a visual explorer, SQL editor, schema management, and backup/restore workflows.",
+          "point1": "Visual ERD, table explorer, filters, sorting, pagination, and row editing.",
+          "point2": "Auto-generated REST API via PostgREST plus multi-schema endpoints with identifier sanitization and safe orchestration.",
+          "point3": "Daily automated backups, retention policies, exports, imports, and non-destructive restore."
+        },
+        "storage": {
+          "title": "S3-compatible storage",
+          "description": "Create project buckets, browse files, upload with progress, and generate secure presigned URLs from the portal.",
+          "point1": "Buckets are scoped to projects with public/private policies.",
+          "point2": "File browser includes folders, breadcrumbs, multi-select, and type-aware actions.",
+          "point3": "Presigned GET and PUT links support expirations from minutes to days."
+        },
+        "controlPlane": {
+          "title": "Integrated control plane",
+          "description": "Go-based control plane coordinates auth, service roles, projects, instances, cleanup, backups, and managed service orchestration.",
+          "point1": "Typed config, structured logs, contextual timeouts, and zero global state.",
+          "point2": "Kubernetes-backed tenant orchestration with rollback on partial failures.",
+          "point3": "Built to expand into env vars/secrets, cron jobs, monitoring/tracing/logging, cost dashboard, MongoDB, LLM integration, a self-service Kubernetes engine for customer workloads, container registry, public IP controls, and load balancers."
+        }
+      }
+    },
+    "sovereignty": {
+      "eyebrow": "Trust and sovereignty",
+      "title": "Built so foreign cloud lock-in is no longer the default",
+      "subtitle": "MassiCloud exists because Algerian companies now need both strong developer ergonomics and infrastructure that matches local legal obligations.",
+      "items": {
+        "residency": {
+          "title": "Data residency",
+          "description": "The platform is designed around keeping tenant data in Algerian datacenters, rather than making residency an optional add-on."
+        },
+        "jurisdiction": {
+          "title": "Algerian jurisdiction",
+          "description": "The product vision is explicit: customer data should remain accessible under Algerian law, not under foreign cloud vendor regimes."
+        },
+        "lawReady": {
+          "title": "Law 18-07 and 25-11 ready",
+          "description": "Audit schemas, consent records, breach logs, and personal-data registry workflows directly support local compliance obligations."
+        },
+        "founder": {
+          "title": "Founder-led execution",
+          "description": "MassiCloud is built by Amine Kessar with a public repository and a product roadmap focused on the Algerian developer ecosystem."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Start with the essentials",
+      "title": "Launch on infrastructure that matches how Algerian products are built",
+      "subtitle": "Use MassiCloud for sovereign databases, storage, authentication, and compliance-friendly delivery — then grow into observability, automation, Kubernetes abstractions, broader databases, AI integration, networking controls, and realtime as the roadmap ships.",
+      "primary": "See pricing",
+      "secondary": "View roadmap"
+    },
+    "seo": {
+      "title": "MassiCloud — Sovereign cloud platform for Algeria",
+      "description": "MassiCloud is the sovereign developer platform for Algeria, combining managed Postgres, MySQL, Redis, S3-compatible storage, and compliance-first infrastructure, running on Kubernetes.",
+      "keywords": [
+        "MassiCloud",
+        "Algeria cloud",
+        "sovereign cloud Algeria",
+        "managed Postgres Algeria",
+        "managed MySQL Algeria",
+        "S3 storage Algeria",
+        "Law 18-07 cloud"
+      ]
+    }
+  },
+  "platform": {
+    "hero": {
+      "badge": "Platform overview",
+      "title": "Everything you need to ship on sovereign infrastructure",
+      "subtitle": "MassiCloud combines managed data services, developer tooling, and a control plane designed for Algerian tenancy, operations, and compliance.",
+      "description": "The product is deliberately focused: ship the services teams need most today, then expand into the missing primitives of a full sovereign developer cloud."
+    },
+    "status": {
+      "live": "Live"
+    },
+    "live": {
+      "eyebrow": "Available today",
+      "title": "Live services powering the first customer workloads",
+      "subtitle": "These services are already part of the working product and form the core of the current MassiCloud pilot offering.",
+      "cards": {
+        "postgres": {
+          "title": "Managed Postgres",
+          "description": "Production-ready database provisioning with admin tools that feel familiar to modern BaaS users.",
+          "point1": "Visual explorer with schemas, tables, columns, indexes, foreign keys, and ERD views.",
+          "point2": "SQL editor, row editing, imports/exports, and multi-tab workflows inside the portal.",
+          "point3": "Backups, restore-to-new-instance, retention controls, and schema bootstrap options."
+        },
+        "mysql": {
+          "title": "Managed MySQL",
+          "description": "MySQL 8.4 as a first-class database option alongside Postgres, with the same REST-over-HTTP and SDK ergonomics.",
+          "point1": "REST CRUD and PostgREST-compatible filtering via a dedicated mysql-rest sidecar per instance.",
+          "point2": "SQL console in the portal with MySQL-specific quick-start queries.",
+          "point3": "Backups and full schema-explorer parity with Postgres are still on the roadmap."
+        },
+        "redis": {
+          "title": "Managed Redis",
+          "description": "Dedicated project cache instances controlled from the same platform and identity model as the rest of the stack.",
+          "point1": "Tenant isolation per project with control-plane lifecycle management.",
+          "point2": "Aligned operational model with the rest of the MassiCloud platform.",
+          "point3": "Foundation for future queues, realtime, and event-driven products."
+        },
+        "storage": {
+          "title": "S3-compatible object storage",
+          "description": "Bucket-level access policies, browser-based file management, and presigned URL workflows for uploads and downloads.",
+          "point1": "Project-scoped namespaces keep storage isolated by tenant.",
+          "point2": "Uploads, downloads, deletions, folder navigation, and multi-file handling from the portal.",
+          "point3": "Public/private bucket policies with expirations for secure sharing."
+        },
+        "auth": {
+          "title": "Authentication",
+          "description": "Secure JWT-based authentication and service-role model are live and power the MassiCloud portal and control-plane API today.",
+          "point1": "JWT token issuance with secure sign-up, sign-in, and session management.",
+          "point2": "Role-based and service-role access integrated with project and instance-level controls.",
+          "point3": "Per-project API keys (anon + service_role) are live. SSO and OAuth providers are planned for a future release."
+        },
+        "compliance": {
+          "title": "Compliance & Audit Setup",
+          "description": "Full compliance schema and AUDIT trail are implemented and live, helping businesses meet Law 18-07 and 25-11 obligations.",
+          "point1": "AUDIT schema with triggers tracking inserts, updates, deletes, IPs, and timestamps across all critical tables.",
+          "point2": "Compliance schemas for consent records, data subject requests, breach logs, and personal-data registries.",
+          "point3": "Ready-to-use structures so businesses can demonstrate governance, auditability, and ANPDP readiness."
+        }
+      }
+    },
+    "soon": {
+      "eyebrow": "Next up",
+      "title": "The full sovereign cloud stack — quarter by quarter",
+      "subtitle": "MassiCloud grows from a strong data platform into a complete sovereign developer cloud, layering observability, automation, broader databases, AI, infrastructure primitives, and realtime capabilities.",
+      "cards": {
+        "monitoring": {
+          "quarter": "Q3 2026",
+          "title": "Monitoring, Tracing & Logging",
+          "description": "Full observability per instance: CPU, RAM, storage, distributed tracing, structured logs, dashboards, and health alerts."
+        },
+        "audit": {
+          "quarter": "Q3 2026",
+          "title": "Rate Limits & Audit Logs",
+          "description": "Per-user and per-IP throttling with structured action logs and full audit trail visibility inside the portal."
+        },
+        "secrets": {
+          "quarter": "Q3 2026",
+          "title": "Environment Variables & Secrets",
+          "description": "Encrypted environment variables, versioned project secrets, and secure configuration management for all workloads."
+        },
+        "cronjobs": {
+          "quarter": "Q4 2026",
+          "title": "CronJobs",
+          "description": "Managed scheduled tasks with cron expressions, execution logs, retries, and per-project job isolation."
+        },
+        "costdashboard": {
+          "quarter": "Q4 2026",
+          "title": "Cost Dashboard",
+          "description": "Pay-as-you-go usage metering with per-project cost breakdowns, spending trends, and budget visibility in the portal."
+        },
+        "rabbitmq": {
+          "quarter": "Q4 2026",
+          "title": "RabbitMQ as a Service",
+          "description": "Managed queues, exchanges, bindings, DLQs, and connection strings per project."
+        },
+        "kafka": {
+          "quarter": "Q4 2026",
+          "title": "Kafka as a Service",
+          "description": "High-throughput streaming for analytics pipelines, event ingestion, and consumer groups."
+        },
+        "mongodb": {
+          "quarter": "Q1 2027",
+          "title": "Managed MongoDB",
+          "description": "MongoDB as a managed service with a visual document explorer, collections browser, backups, and restore workflows."
+        },
+        "llm": {
+          "quarter": "Q1 2027",
+          "title": "LLM Models Integration",
+          "description": "Sovereign Algerian-hosted LLM inference endpoints so AI-powered apps never route sensitive data through foreign clouds."
+        },
+        "filesystem": {
+          "quarter": "Q2 2027",
+          "title": "File System Storage",
+          "description": "Persistent file system volumes for workloads that need mounted storage beyond object bucket access patterns."
+        },
+        "kubernetes": {
+          "quarter": "Q2 2027",
+          "title": "Kubernetes Engine",
+          "description": "Managed Kubernetes clusters for containerized workloads with control-plane provisioning and tenant-scoped namespaces."
+        },
+        "containerregistry": {
+          "quarter": "Q2 2027",
+          "title": "Container Registry",
+          "description": "Private image registry for building and storing container images with access controls per project."
+        },
+        "publicips": {
+          "quarter": "Q3 2027",
+          "title": "Public IPs & IP Whitelisting",
+          "description": "Assign dedicated public IP addresses to instances and enforce IP-based access rules and allowlists per project."
+        },
+        "loadbalancers": {
+          "quarter": "Q3 2027",
+          "title": "Load Balancers",
+          "description": "Managed load balancer configuration for distributing traffic across instances with health checks and failover."
+        },
+        "edge": {
+          "quarter": "Q3 2027",
+          "title": "Edge Functions",
+          "description": "Deploy JavaScript and TypeScript functions with first-class access to MassiCloud services."
+        },
+        "realtime": {
+          "quarter": "Q3 2027",
+          "title": "Realtime channels",
+          "description": "WebSocket subscriptions to Postgres changes, presence, and custom pub/sub events."
+        },
+        "webhooks": {
+          "quarter": "Q3 2027",
+          "title": "Webhooks",
+          "description": "Signed outbound events with retries, exponential backoff, and dead-letter queues."
+        }
+      }
+    },
+    "architecture": {
+      "eyebrow": "How it is built",
+      "title": "A practical stack designed for reliability first",
+      "subtitle": "MassiCloud deliberately uses a grounded operational architecture: Go, Kubernetes, Postgres, MySQL, Redis, MinIO, and a modern Next.js portal.",
+      "cards": {
+        "controlPlane": {
+          "title": "Single Go control plane",
+          "description": "Chi router, typed configuration, MinIO SDK, Kubernetes client-go, pgx, and SQL tooling drive provisioning and management workflows."
+        },
+        "tenantRuntime": {
+          "title": "Kubernetes-native tenant runtime",
+          "description": "Postgres and MySQL tenants run as StatefulSets in isolated per-project Kubernetes namespaces, each with a matching REST sidecar (PostgREST or mysql-rest)."
+        },
+        "storageFabric": {
+          "title": "Shared storage fabric",
+          "description": "A shared MinIO cluster serves project buckets with namespace isolation and S3-compatible behavior."
+        },
+        "operations": {
+          "title": "Operational automation",
+          "description": "Background schedulers handle backups, retention cleanup, and future platform automation without hidden external dependencies."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "See the rollout",
+      "title": "The current release is intentionally narrow — the roadmap is intentionally ambitious",
+      "subtitle": "Start with the services already live, then track how MassiCloud expands into messaging, secrets, realtime, edge compute, and SDKs.",
+      "primary": "See pricing",
+      "secondary": "View roadmap"
+    },
+    "seo": {
+      "title": "Platform — Managed sovereign infrastructure for Algeria",
+      "description": "Explore the MassiCloud platform: managed Postgres, MySQL, Redis, object storage, a Kubernetes-native control plane architecture, and upcoming sovereign cloud services for Algeria.",
+      "keywords": [
+        "MassiCloud platform",
+        "managed Postgres",
+        "managed MySQL",
+        "managed Redis",
+        "object storage",
+        "developer platform Algeria"
+      ]
+    }
+  },
+  "pricing": {
+    "hero": {
+      "badge": "Pricing",
+      "title": "Straightforward pricing in Algerian dinars",
+      "subtitle": "Choose a plan that matches your stage today, then scale into dedicated support and compliance workflows as your product grows.",
+      "description": "MassiCloud pricing is designed for local procurement realities: local currency, pilot-friendly packaging, and no forced dependency on foreign billing rails."
+    },
+    "tiers": {
+      "starter": {
+        "badge": "For builders",
+        "name": "Starter",
+        "description": "Ideal for early products, internal tools, and first production deployments that need sovereign infrastructure without heavy complexity.",
+        "price": "9 000 DZD",
+        "period": "/ month",
+        "feature1": "1 managed Postgres instance",
+        "feature2": "1 managed Redis instance",
+        "feature3": "50 GB object storage included",
+        "feature4": "Daily backups with 7-day retention",
+        "feature5": "Community-level support and public roadmap access",
+        "cta": "Start with Starter"
+      },
+      "growth": {
+        "badge": "For teams shipping",
+        "highlight": "Most popular",
+        "name": "Growth",
+        "description": "Built for startups and SMBs that need more storage, longer retention, and stronger operational guarantees.",
+        "price": "29 000 DZD",
+        "period": "/ month",
+        "feature1": "Up to 3 managed Postgres instances",
+        "feature2": "Up to 3 managed Redis instances",
+        "feature3": "250 GB object storage included",
+        "feature4": "30-day backup retention and priority restore support",
+        "feature5": "Priority email support and migration assistance",
+        "cta": "Choose Growth"
+      },
+      "enterprise": {
+        "badge": "For regulated workloads",
+        "name": "Enterprise",
+        "description": "For institutions and larger companies that need procurement support, compliance mapping, architecture reviews, and custom rollout planning.",
+        "price": "Custom",
+        "period": "engagement",
+        "feature1": "Custom capacity planning and isolated deployment options",
+        "feature2": "Compliance workshops for Law 18-07 and 25-11 requirements",
+        "feature3": "Custom retention, audit, and backup policies",
+        "feature4": "SLA discussions and onboarding assistance",
+        "feature5": "Direct founder access during pilot rollout",
+        "cta": "Talk compliance"
+      }
+    },
+    "note": {
+      "title": "Pilot-stage pricing note",
+      "description": "These packages are designed for the current pilot phase. Final production packaging may evolve as monitoring, secrets, messaging, and enterprise controls are released."
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Questions customers will ask first",
+      "subtitle": "The commercial model is designed around Algerian procurement, compliance, and migration concerns — not generic hyperscaler assumptions.",
+      "items": {
+        "currency": {
+          "question": "Why price in DZD instead of USD or EUR?",
+          "answer": "Because local billing matters. MassiCloud is designed for Algerian companies that want procurement in local currency and fewer operational dependencies on foreign payment infrastructure."
+        },
+        "invoicing": {
+          "question": "Are invoices and support local?",
+          "answer": "That is the goal of the platform positioning. Enterprise engagements are intended to include local onboarding, local communication, and documentation aligned with Algerian customers."
+        },
+        "contracts": {
+          "question": "Can regulated organizations get a custom package?",
+          "answer": "Yes. The Enterprise tier exists for custom retention, architecture reviews, phased migration planning, and broader compliance mapping for regulated or higher-risk workloads."
+        },
+        "migration": {
+          "question": "Can we migrate from foreign cloud services?",
+          "answer": "Yes. Managed Postgres already supports export, import, backups, and restore workflows (MySQL migration works via direct SQL access today, with the same tooling on the roadmap). Migration assistance becomes stronger in Growth and Enterprise engagements."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Start your pilot",
+      "title": "Begin with the tier that matches your current stage",
+      "subtitle": "Adopt sovereign infrastructure now, then expand your footprint as the broader MassiCloud platform matures.",
+      "primary": "Create an account",
+      "secondary": "Explore the platform"
+    },
+    "seo": {
+      "title": "Pricing — Sovereign cloud plans in Algerian dinars",
+      "description": "See MassiCloud pricing in DZD with Starter, Growth, and Enterprise tiers for sovereign databases, storage, and compliance-oriented workloads.",
+      "keywords": [
+        "MassiCloud pricing",
+        "DZD cloud pricing",
+        "Algeria hosting pricing",
+        "managed database pricing Algeria",
+        "sovereign cloud pricing"
+      ]
+    }
+  },
+  "compliance": {
+    "hero": {
+      "badge": "Compliance & sovereignty",
+      "title": "Built for Law 18-07 and 25-11",
+      "subtitle": "MassiCloud is designed so data protection obligations are reflected in the platform architecture, not bolted on after infrastructure choices are already made.",
+      "description": "For Algerian companies handling personal data, sovereignty is no longer a branding preference. It is a procurement, risk, and compliance requirement."
+    },
+    "laws": {
+      "eyebrow": "Legal foundation",
+      "title": "Two laws define the landscape",
+      "subtitle": "MassiCloud is positioned around the practical operational implications of Algeria's data-protection framework.",
+      "cards": {
+        "law1807": {
+          "label": "Law 18-07",
+          "title": "Personal data protection framework",
+          "description": "Law 18-07 sets the baseline obligations around consent, data subject rights, breach handling, and structured accountability for personal-data processing.",
+          "point1": "Requires traceability and governance around personal data handling.",
+          "point2": "Creates operational needs for auditability, requests, and legal evidence.",
+          "point3": "Shapes why compliance tooling must exist inside the platform itself."
+        },
+        "law2511": {
+          "label": "Law 25-11",
+          "title": "Stronger practical restrictions on data transfers",
+          "description": "Storing Algerian personal data on foreign clouds is now a legal risk under Law 25-11 (July 2025). The update tightens cross-border transfer restrictions and increases the practical cost of continuing to rely on foreign infrastructure for customer data.",
+          "point1": "Raises the importance of ANPDP-facing readiness and declarations.",
+          "point2": "Makes cross-border transfer choices materially more sensitive.",
+          "point3": "Pushes local companies toward sovereign infrastructure procurement."
+        }
+      }
+    },
+    "requirements": {
+      "eyebrow": "What customers need",
+      "title": "Eight compliance requirements MassiCloud addresses",
+      "subtitle": "The product roadmap and current implementation already reflect the core controls Algerian organizations ask for when evaluating data platforms.",
+      "items": {
+        "residency": {
+          "title": "Data residency by default",
+          "description": "The architecture is designed to keep tenant data in Algerian datacenters rather than offering residency as a later optional policy."
+        },
+        "anpdp": {
+          "title": "ANPDP readiness",
+          "description": "Compliance schemas and records help organizations prepare structured declarations, inventories, and legal documentation. MassiCloud provides the infrastructure and tooling — you remain responsible for filing your own ANPDP declaration if your processing requires one."
+        },
+        "dpo": {
+          "title": "Support for DPO workflows",
+          "description": "Data request handling is considered directly in the compliance model to support access, deletion, rectification, and portability workflows."
+        },
+        "audit": {
+          "title": "Audit trail by design",
+          "description": "Audit schemas and triggers provide the basis for tracking inserts, updates, deletes, IPs, and timestamps."
+        },
+        "consent": {
+          "title": "Consent evidence",
+          "description": "Consent grants and revocations can be modeled and exported as evidence rather than living in unstructured application code."
+        },
+        "breach": {
+          "title": "Breach documentation",
+          "description": "Structured breach records support the operational response needed for regulated incidents and reporting timelines."
+        },
+        "transfers": {
+          "title": "Reduced transfer exposure",
+          "description": "The platform positioning exists precisely to avoid routine dependence on foreign-hosted services for sensitive customer data."
+        },
+        "encryption": {
+          "title": "Encryption in transit and at rest",
+          "description": "TLS, encrypted storage layers, password hashing, and secure service access are part of the security baseline."
+        }
+      }
+    },
+    "penalty": {
+      "badge": "Why timing matters",
+      "title": "Compliance is now a business-risk issue, not just an IT issue",
+      "subtitle": "The 2025 regulatory context increases the cost of ignoring sovereignty and personal-data governance when choosing application infrastructure.",
+      "maximumLabel": "Potential sanctions",
+      "amount": "1 000 000 DZD",
+      "note": "The project brief also highlights possible criminal liability, which makes infrastructure choice a legal risk decision for affected organizations."
+    },
+    "assurances": {
+      "eyebrow": "How MassiCloud responds",
+      "title": "Sovereignty is translated into concrete platform controls",
+      "subtitle": "Rather than promising compliance with marketing language alone, MassiCloud turns the sovereignty story into technical defaults and workflow support.",
+      "items": {
+        "architecture": {
+          "title": "Architecture-level guarantees",
+          "description": "Control-plane, storage, and service design are oriented around local hosting and local legal alignment from the beginning."
+        },
+        "jurisdiction": {
+          "title": "Jurisdiction-first positioning",
+          "description": "The value proposition is explicit: infrastructure that is intended to remain under Algerian jurisdiction for Algerian customer workloads."
+        },
+        "controls": {
+          "title": "Operational controls",
+          "description": "Retention, backups, audit support, secure access, and environment controls align the platform with real governance needs."
+        },
+        "evidence": {
+          "title": "Compliance evidence",
+          "description": "Schemas for consents, data requests, breach logs, and registries help customers generate actual records, not just policy PDFs."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Build with confidence",
+      "title": "Choose infrastructure that lowers both technical and regulatory friction",
+      "subtitle": "MassiCloud is for teams that need modern developer tooling without accepting unnecessary sovereignty risk.",
+      "primary": "See pricing",
+      "secondary": "View roadmap"
+    },
+    "seo": {
+      "title": "Compliance — Built for Algerian Laws 18-07 and 25-11",
+      "description": "Understand how MassiCloud aligns its architecture with Algerian data residency, ANPDP readiness, auditability, breach workflows, and sovereignty requirements.",
+      "keywords": [
+        "Law 18-07",
+        "Law 25-11",
+        "ANPDP",
+        "data residency Algeria",
+        "sovereign compliance cloud"
+      ]
+    }
+  },
+  "roadmap": {
+    "hero": {
+      "badge": "Roadmap",
+      "title": "Where MassiCloud goes next",
+      "subtitle": "The foundations are already in place. The roadmap turns the current platform into the default sovereign cloud stack for Algerian software teams.",
+      "description": "Each quarter adds a new layer of capability: stronger operations, messaging, broader databases, secrets, realtime, functions, SDKs, and eventually multi-datacenter scale."
+    },
+    "now": {
+      "eyebrow": "Current state",
+      "title": "A real platform already exists today",
+      "subtitle": "MassiCloud is not a concept deck. Core platform phases are already delivered and live services are already usable.",
+      "cards": {
+        "phases": {
+          "label": "Phases completed",
+          "value": "8 / 10",
+          "description": "Control plane, portal, explorer, auth, storage, compliance schemas, backups, restore, export, and import are implemented."
+        },
+        "services": {
+          "label": "Services active",
+          "value": "6 / 18",
+          "description": "Postgres, MySQL, Redis, object storage, authentication, and compliance tooling form the live service base for pilot customers."
+        },
+        "compliance": {
+          "label": "Compliance & Audit",
+          "value": "Live",
+          "description": "Full AUDIT schema, compliance records, consent tracking, breach logs, and personal-data registry are implemented and active."
+        }
+      }
+    },
+    "timeline": {
+      "eyebrow": "Quarter timeline",
+      "title": "A quarter-by-quarter path to a full sovereign cloud",
+      "subtitle": "The roadmap expands from stronger operational foundations into messaging, broader data services, secrets, edge compute, SDKs, and national scale.",
+      "items": {
+        "q32026": {
+          "period": "Q3 2026",
+          "title": "Platform Hardening & Observability",
+          "summary": "Make the existing base production-grade with full observability, controls, and environment management.",
+          "theme": "Reliability, monitoring & configuration",
+          "point1": "Monitoring, distributed tracing, and structured logging with dashboards and health alerts per instance.",
+          "point2": "Rate limiting, structured audit logs, and environment variables & secrets management.",
+          "point3": "Usage metering foundations and cost tracking per tenant project."
+        },
+        "q42026": {
+          "period": "Q4 2026",
+          "title": "Automation & Messaging",
+          "summary": "Add the scheduling and event-driven primitives modern apps need for async processing and background work.",
+          "theme": "Jobs, queues & cost visibility",
+          "point1": "CronJobs service with scheduling, execution logs, retries, and per-project job isolation.",
+          "point2": "Cost Dashboard with pay-as-you-go metering and per-project usage breakdowns.",
+          "point3": "RabbitMQ and Kafka as managed services for async processing, event streaming, and consumer groups."
+        },
+        "q12027": {
+          "period": "Q1 2027",
+          "title": "Data Ecosystem Expansion",
+          "summary": "Cover the major database models Algerian teams use across greenfield and legacy applications.",
+          "theme": "More databases & AI integration",
+          "point1": "MongoDB as a managed service with document explorer, backups, and restore workflows.",
+          "point2": "MySQL backups, restore, and full schema-explorer parity — REST CRUD and the SQL console already shipped.",
+          "point3": "Sovereign LLM models integration with Algerian-hosted inference endpoints for AI-powered apps."
+        },
+        "q22027": {
+          "period": "Q2 2027",
+          "title": "Infrastructure Primitives",
+          "summary": "Give teams the compute and storage building blocks to run any workload on sovereign infrastructure.",
+          "theme": "Kubernetes, containers & file storage",
+          "point1": "File system storage for persistent volumes and workloads beyond object storage patterns.",
+          "point2": "Managed Kubernetes engine with tenant-scoped namespaces and control-plane provisioning.",
+          "point3": "Private container registry for image hosting and CI/CD deployment pipelines."
+        },
+        "q32027": {
+          "period": "Q3 2027",
+          "title": "Networking & Compute",
+          "summary": "Complete the infrastructure layer with networking controls and turn the platform into a true application runtime.",
+          "theme": "IPs, load balancers & edge compute",
+          "point1": "Public IP addresses, IP whitelisting, and load balancer configuration for production workloads.",
+          "point2": "Edge Functions with logs and SDK access to core services.",
+          "point3": "Realtime subscriptions, pub/sub channels, presence tracking, and signed webhook delivery."
+        },
+        "q42027": {
+          "period": "Q4 2027",
+          "title": "Developer Experience Expansion",
+          "summary": "Make MassiCloud dramatically faster to adopt from application code and CI/CD pipelines.",
+          "theme": "SDKs and delivery workflows",
+          "point1": "Python and Go SDKs (JavaScript/TypeScript SDK — @massicloud/client — is already shipped).",
+          "point2": "MassiCloud CLI for auth, database workflows, and function deployment.",
+          "point3": "Migration tooling with rollback support and branch-based workflows."
+        },
+        "y2028": {
+          "period": "2028",
+          "title": "Scale and National Expansion",
+          "summary": "Move from a strong local cloud platform into national default infrastructure with regional ambition.",
+          "theme": "Scale, AI, and regional growth",
+          "point1": "Multi-AZ deployments, read replicas, and database branching for high-availability workloads.",
+          "point2": "Advanced AI platform features: vector databases, fine-tuned sovereign models, and privacy-first inference.",
+          "point3": "Maghreb expansion, DZD billing depth, marketplace integrations, and mobile SDKs."
+        }
+      }
+    },
+    "cta": {
+      "eyebrow": "Track the build",
+      "title": "MassiCloud is building toward the full sovereign developer stack",
+      "subtitle": "Start with the live services today, then follow the roadmap as the platform expands into every major primitive a modern app needs.",
+      "primary": "Explore the platform",
+      "secondary": "See pricing"
+    },
+    "seo": {
+      "title": "Roadmap — The future of MassiCloud",
+      "description": "Follow the MassiCloud roadmap from platform hardening to messaging, secrets, edge functions, realtime, SDKs, and multi-datacenter sovereign cloud scale.",
+      "keywords": [
+        "MassiCloud roadmap",
+        "Algeria cloud roadmap",
+        "edge functions Algeria",
+        "realtime platform Algeria",
+        "sovereign cloud future"
+      ]
+    }
+  },
+  "docs": {
+    "hero": {
+      "title": "Documentation",
+      "subtitle": "Everything you need to build with MassiCloud."
+    }
+  }
+}

@@ -1,0 +1,103 @@
+name: massicloud
+
+networks:
+  massicloud:
+    driver: bridge
+    name: massicloud
+
+volumes:
+  postgres_data:
+  platform_db_data:
+  redis_data:
+  minio_data:
+  grafana_data:
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: massicloud_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - massicloud
+
+  # Platform metadata DB (users, projects, stages, instances, ...).
+  # Separate from `postgres` above, which hosts provisioned tenant databases.
+  platform-db:
+    image: postgres:16-alpine
+    container_name: massicloud_platform_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${PLATFORM_DB_USER}
+      POSTGRES_PASSWORD: ${PLATFORM_DB_PASSWORD}
+      POSTGRES_DB: ${PLATFORM_DB_NAME}
+    volumes:
+      - platform_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - massicloud
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: massicloud_pgbouncer
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${PG_USER}:${PG_PASSWORD}@postgres:5432/${PG_DB}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+    ports:
+      - "6432:5432"
+    depends_on:
+      - postgres
+    networks:
+      - massicloud
+
+  redis:
+    image: redis:7-alpine
+    container_name: massicloud_redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - massicloud
+
+  minio:
+    image: minio/minio:latest
+    container_name: massicloud_minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    ports:
+      - "9005:9000"
+      - "9001:9001"
+    networks:
+      - massicloud
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: massicloud_grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - massicloud

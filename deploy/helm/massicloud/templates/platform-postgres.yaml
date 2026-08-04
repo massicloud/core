@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-postgres-creds
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: {{ .Values.platformPostgres.password | quote }}
+  DATABASE_URL: "postgres://massicloud:{{ .Values.platformPostgres.password }}@platform-postgres:5432/massicloud?sslmode=disable"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-postgres
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: platform-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: platform-postgres
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: platform-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-postgres
+  template:
+    metadata:
+      labels:
+        app: platform-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: massicloud
+        - name: POSTGRES_DB
+          value: massicloud
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: platform-postgres-creds
+              key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        resources:
+{{ toYaml .Values.platformPostgres.resources | indent 10 }}
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "massicloud"]
+          initialDelaySeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      storageClassName: {{ .Values.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.platformPostgres.storage }}

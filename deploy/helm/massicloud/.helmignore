@@ -1,0 +1,12 @@
+# Patterns to ignore when building packages.
+.DS_Store
+.git/
+.gitignore
+*.orig
+*~
+.project
+.idea/
+*.tmproj
+.vscode/
+values-live.yaml
+values-*-live.yaml

@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Cairo:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  html {
+    background-color: #0A0A0A;
+    color: #FAFAFA;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html[dir='rtl'] {
+    font-family: 'Cairo', system-ui, sans-serif;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.1), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 40%, rgba(212, 168, 67, 0.05), transparent),
+      #0A0A0A;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: #D4A843;
+    color: #0A0A0A;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0A0A0A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #27272A;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3B3B3B;
+  }
+}
+
+@layer components {
+  .text-gradient-gold {
+    background: linear-gradient(to right, #D4A843, #F5D67E);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-cool {
+    background: linear-gradient(to right, #FAFAFA, #A1A1AA);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glass-card {
+    background: rgba(17, 17, 17, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid #1F1F23;
+  }
+
+  .section-reveal {
+    @apply motion-safe:animate-fade-up;
+  }
+
+  .interactive-card {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:border-border-light;
+  }
+}
