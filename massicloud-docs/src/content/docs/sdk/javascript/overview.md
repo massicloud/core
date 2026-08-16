@@ -8,7 +8,7 @@ description: The official MassiCloud client for JavaScript and TypeScript.
 ## What it does
 
 - Authenticate end-users (sign up, sign in, sign out)
-- Query Postgres or [MySQL](/concepts/mysql) tables via the REST API — same calls either way
+- Query Postgres tables via the REST API
 - Read, write, and create signed URLs for object storage buckets
 - Manage tokens automatically (refresh, persistence)
 - Same API shape as Supabase (intentional — migration is mostly a search-and-replace)

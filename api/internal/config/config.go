@@ -24,10 +24,8 @@ type Config struct {
 
 	// Backing-service images used when provisioning tenant workloads on k8s.
 	PostgresImage  string
-	MySQLImage     string
 	RedisImage     string
 	PostgRESTImage string
-	MySQLRESTImage string
 }
 
 func Load() (*Config, error) {
@@ -97,10 +95,6 @@ func Load() (*Config, error) {
 	if postgresImage == "" {
 		postgresImage = "postgres:16-alpine"
 	}
-	mysqlImage := os.Getenv("MYSQL_IMAGE")
-	if mysqlImage == "" {
-		mysqlImage = "mysql:8.4"
-	}
 	redisImage := os.Getenv("REDIS_IMAGE")
 	if redisImage == "" {
 		redisImage = "redis:7-alpine"
@@ -108,10 +102,6 @@ func Load() (*Config, error) {
 	postgrestImage := os.Getenv("POSTGREST_IMAGE")
 	if postgrestImage == "" {
 		postgrestImage = "postgrest/postgrest:v12.2.3"
-	}
-	mysqlRestImage := os.Getenv("MYSQL_REST_IMAGE")
-	if mysqlRestImage == "" {
-		mysqlRestImage = "ghcr.io/mikaminou/massicloud-mysql-rest:0.1.0"
 	}
 
 	apiBaseURL := os.Getenv("API_BASE_URL")
@@ -134,9 +124,7 @@ func Load() (*Config, error) {
 		MinioPassword:  minioPassword,
 		MinioUseSSL:    minioUseSSL,
 		PostgresImage:  postgresImage,
-		MySQLImage:     mysqlImage,
 		RedisImage:     redisImage,
 		PostgRESTImage: postgrestImage,
-		MySQLRESTImage: mysqlRestImage,
 	}, nil
 }

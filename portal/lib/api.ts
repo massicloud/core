@@ -76,7 +76,8 @@ api.interceptors.response.use(
       if (hadToken) {
         removeToken();
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          const redirect = window.location.pathname + window.location.search;
+          window.location.href = `/login?reason=expired&redirect=${encodeURIComponent(redirect)}`;
         }
       }
     }
@@ -107,6 +108,15 @@ export function getErrorMessage(error: unknown) {
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const response = await api.post<LoginResponse>("/auth/login", { email, password });
+  return response.data;
+}
+
+export async function register(email: string, password: string, fullName: string): Promise<User> {
+  const response = await api.post<User>("/auth/register", {
+    email,
+    password,
+    full_name: fullName,
+  });
   return response.data;
 }
 
@@ -178,22 +188,6 @@ export async function createPostgresInstance(req: CreateInstanceRequest): Promis
 
 export async function deletePostgresInstance(id: string): Promise<void> {
   await api.delete(`/postgres/${id}`);
-}
-
-// ============ MYSQL ============
-
-export async function getMySQLInstances(projectId?: string): Promise<Instance[]> {
-  if (projectId) {
-    const response = await api.get<Instance[]>("/mysql", {
-      params: { project_id: projectId },
-    });
-    return response.data;
-  }
-  return [];
-}
-
-export async function deleteMySQLInstance(id: string): Promise<void> {
-  await api.delete(`/mysql/${id}`);
 }
 
 // ============ REDIS ============

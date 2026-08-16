@@ -36,7 +36,7 @@ This means:
 
 ## Multiple databases in a stage
 
-A stage can hold many database instances — for example, a Postgres for relational data, a [MySQL](/concepts/mysql) database for a ported app, plus a Redis for caching. Add databases to an existing stage via the Stages page.
+A stage can hold many database instances — for example, a Postgres for relational data plus a Redis for caching. Add databases to an existing stage via the Stages page.
 
 The SDK lets you switch databases within a stage:
 

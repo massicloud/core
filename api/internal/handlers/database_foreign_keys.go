@@ -28,7 +28,7 @@ func (h *Handler) GetForeignKeys(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Use pg_constraint directly — information_schema.referential_constraints
-	// uses MySQL-style column names that don't exist in PostgreSQL.
+	// uses column names that don't exist in PostgreSQL's own catalog views.
 	query := `
 		SELECT
 			con.conname                                        AS constraint_name,

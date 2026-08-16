@@ -40,7 +40,6 @@ export function useIsProvisioningInstance(): boolean {
 
 export function instanceTypeLabel(type: string): string {
   switch (type) {
-    case "mysql": return "MySQL"
     case "postgres": return "Postgres"
     case "redis": return "Redis"
     default: return type

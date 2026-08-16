@@ -1,9 +1,9 @@
 ---
 title: Database (REST) API
-description: HTTP endpoints for querying your Postgres or MySQL database.
+description: HTTP endpoints for querying your Postgres database.
 ---
 
-The REST API for querying tables follows [PostgREST](https://postgrest.org) conventions. The exact same URL shape and filter syntax below also works against [MySQL](/concepts/mysql) databases — the platform routes to the right REST service (PostgREST or mysql-rest) server-side based on how the database was created. MySQL supports a smaller filter subset; see the [SDK filter compatibility table](/sdk/javascript/rest/filters#reference) for exactly what differs.
+The REST API for querying tables follows [PostgREST](https://postgrest.org) conventions.
 
 ## Base path
 

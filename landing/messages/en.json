@@ -40,7 +40,7 @@
     "hero": {
       "title": "The sovereign developer platform for Algeria",
       "subtitle": "A sovereign application platform that combines Infrastructure sovereignty with BaaS developer experience for Algerian companies and founders.",
-      "description": "Managed Postgres, MySQL, Redis, S3-compatible object storage, authentication, compliance tooling, and a control plane that abstracts Kubernetes complexity (service roles, tenancy boundaries, and operations) so customer data stays on Algerian soil and under Algerian law.",
+      "description": "Managed Postgres, Redis, S3-compatible object storage, authentication, compliance tooling, and a control plane that abstracts Kubernetes complexity (service roles, tenancy boundaries, and operations) so customer data stays on Algerian soil and under Algerian law.",
       "primaryCta": "Get started",
       "secondaryCta": "Explore the platform"
     },
@@ -53,7 +53,7 @@
       "services": {
         "label": "Services live now",
         "value": "6 / 18",
-        "description": "Managed Postgres, MySQL, Redis, S3-compatible storage, authentication, and compliance setup are all active today."
+        "description": "Managed Postgres, Redis, S3-compatible storage, authentication, and compliance setup are all active today."
       },
       "compliance": {
         "label": "Compliance & Audit",
@@ -68,11 +68,6 @@
       "postgres": {
         "title": "Managed Postgres",
         "description": "Database explorer, SQL editor, schema tools, backups, restore, export, and import.",
-        "status": "Available"
-      },
-      "mysql": {
-        "title": "Managed MySQL",
-        "description": "MySQL 8.4 with REST CRUD and a SQL console, running as a first-class option alongside Postgres.",
         "status": "Available"
       },
       "redis": {
@@ -172,13 +167,12 @@
     },
     "seo": {
       "title": "MassiCloud — Sovereign cloud platform for Algeria",
-      "description": "MassiCloud is the sovereign developer platform for Algeria, combining managed Postgres, MySQL, Redis, S3-compatible storage, and compliance-first infrastructure, running on Kubernetes.",
+      "description": "MassiCloud is the sovereign developer platform for Algeria, combining managed Postgres, Redis, S3-compatible storage, and compliance-first infrastructure, running on Kubernetes.",
       "keywords": [
         "MassiCloud",
         "Algeria cloud",
         "sovereign cloud Algeria",
         "managed Postgres Algeria",
-        "managed MySQL Algeria",
         "S3 storage Algeria",
         "Law 18-07 cloud"
       ]
@@ -205,13 +199,6 @@
           "point1": "Visual explorer with schemas, tables, columns, indexes, foreign keys, and ERD views.",
           "point2": "SQL editor, row editing, imports/exports, and multi-tab workflows inside the portal.",
           "point3": "Backups, restore-to-new-instance, retention controls, and schema bootstrap options."
-        },
-        "mysql": {
-          "title": "Managed MySQL",
-          "description": "MySQL 8.4 as a first-class database option alongside Postgres, with the same REST-over-HTTP and SDK ergonomics.",
-          "point1": "REST CRUD and PostgREST-compatible filtering via a dedicated mysql-rest sidecar per instance.",
-          "point2": "SQL console in the portal with MySQL-specific quick-start queries.",
-          "point3": "Backups and full schema-explorer parity with Postgres are still on the roadmap."
         },
         "redis": {
           "title": "Managed Redis",
@@ -338,7 +325,7 @@
     "architecture": {
       "eyebrow": "How it is built",
       "title": "A practical stack designed for reliability first",
-      "subtitle": "MassiCloud deliberately uses a grounded operational architecture: Go, Kubernetes, Postgres, MySQL, Redis, MinIO, and a modern Next.js portal.",
+      "subtitle": "MassiCloud deliberately uses a grounded operational architecture: Go, Kubernetes, Postgres, Redis, MinIO, and a modern Next.js portal.",
       "cards": {
         "controlPlane": {
           "title": "Single Go control plane",
@@ -346,7 +333,7 @@
         },
         "tenantRuntime": {
           "title": "Kubernetes-native tenant runtime",
-          "description": "Postgres and MySQL tenants run as StatefulSets in isolated per-project Kubernetes namespaces, each with a matching REST sidecar (PostgREST or mysql-rest)."
+          "description": "Postgres tenants run as StatefulSets in isolated per-project Kubernetes namespaces, each with a matching PostgREST sidecar."
         },
         "storageFabric": {
           "title": "Shared storage fabric",
@@ -367,11 +354,10 @@
     },
     "seo": {
       "title": "Platform — Managed sovereign infrastructure for Algeria",
-      "description": "Explore the MassiCloud platform: managed Postgres, MySQL, Redis, object storage, a Kubernetes-native control plane architecture, and upcoming sovereign cloud services for Algeria.",
+      "description": "Explore the MassiCloud platform: managed Postgres, Redis, object storage, a Kubernetes-native control plane architecture, and upcoming sovereign cloud services for Algeria.",
       "keywords": [
         "MassiCloud platform",
         "managed Postgres",
-        "managed MySQL",
         "managed Redis",
         "object storage",
         "developer platform Algeria"
@@ -450,7 +436,7 @@
         },
         "migration": {
           "question": "Can we migrate from foreign cloud services?",
-          "answer": "Yes. Managed Postgres already supports export, import, backups, and restore workflows (MySQL migration works via direct SQL access today, with the same tooling on the roadmap). Migration assistance becomes stronger in Growth and Enterprise engagements."
+          "answer": "Yes. Managed Postgres already supports export, import, backups, and restore workflows. Migration assistance becomes stronger in Growth and Enterprise engagements."
         }
       }
     },
@@ -612,7 +598,7 @@
         "services": {
           "label": "Services active",
           "value": "6 / 18",
-          "description": "Postgres, MySQL, Redis, object storage, authentication, and compliance tooling form the live service base for pilot customers."
+          "description": "Postgres, Redis, object storage, authentication, and compliance tooling form the live service base for pilot customers."
         },
         "compliance": {
           "label": "Compliance & Audit",
@@ -650,7 +636,7 @@
           "summary": "Cover the major database models Algerian teams use across greenfield and legacy applications.",
           "theme": "More databases & AI integration",
           "point1": "MongoDB as a managed service with document explorer, backups, and restore workflows.",
-          "point2": "MySQL backups, restore, and full schema-explorer parity — REST CRUD and the SQL console already shipped.",
+          "point2": "Point-in-time recovery and cross-region backup replication, extending the restore tooling already shipped for Postgres.",
           "point3": "Sovereign LLM models integration with Algerian-hosted inference endpoints for AI-powered apps."
         },
         "q22027": {

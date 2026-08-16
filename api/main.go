@@ -73,10 +73,8 @@ func main() {
 		DomainSuffix:   cfg.DomainSuffix,
 		StorageClass:   cfg.StorageClass,
 		PostgresImage:  cfg.PostgresImage,
-		MySQLImage:     cfg.MySQLImage,
 		RedisImage:     cfg.RedisImage,
 		PostgRESTImage: cfg.PostgRESTImage,
-		MySQLRESTImage: cfg.MySQLRESTImage,
 	})
 	if err != nil {
 		slog.Error("failed to initialize k8s client", "error", err)
@@ -114,7 +112,7 @@ func main() {
 	// Deployment readiness). A blanket 30s here was silently capping ALL of
 	// them — including the 60s CreateStage/AddInstanceToStage timeouts,
 	// since a context's effective deadline is always the earliest one in its
-	// chain. That's exactly why MySQL instance creation (which can
+	// chain. That's exactly why tenant instance creation (which can
 	// legitimately take 2-4 minutes on first boot) always failed: the
 	// request got killed at 30s no matter what the handler asked for.
 
@@ -253,17 +251,6 @@ func main() {
 			r.Delete("/{id}", h.DeleteRedis)
 		})
 
-		// MySQL management (scoped to project via query param). REST CRUD
-		// against tenant data goes through the mysql-rest sidecar via
-		// /v1/{slug}/{stage}/db/{db}/rest/*, not through these routes — these
-		// are platform-side admin operations (list/delete/SQL console).
-		r.Route("/mysql", func(r chi.Router) {
-			r.Get("/", h.ListMySQL)
-			r.Delete("/{id}", h.DeleteMySQL)
-			r.Get("/{id}/connection", h.GetMySQLConnection)
-			r.Post("/{id}/query", h.RunMySQLQuery)
-		})
-
 		// Storage — buckets and objects
 		r.Route("/storage/buckets", func(r chi.Router) {
 			r.Post("/", h.CreateBucket)
@@ -313,8 +300,8 @@ func main() {
 				})
 
 				// ProxyREST doesn't set its own context timeout (it streams
-				// through to PostgREST/mysql-rest), so it needs an explicit
-				// one now that there's no global default to fall back on.
+				// through to PostgREST), so it needs an explicit one now
+				// that there's no global default to fall back on.
 				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest/*", h.ProxyREST)
 				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest", h.ProxyREST)
 			})

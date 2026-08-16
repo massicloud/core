@@ -18,7 +18,7 @@ import (
 )
 
 // ProxyREST forwards /v1/{slug}/db/{db}/rest/* to the instance's REST
-// sidecar — PostgREST for postgres instances, mysql-rest for mysql ones.
+// sidecar — PostgREST for postgres instances.
 func (h *Handler) ProxyREST(w http.ResponseWriter, r *http.Request) {
 	project, ok := r.Context().Value(middleware.CtxProject).(models.Project)
 	if !ok {
@@ -44,8 +44,6 @@ func (h *Handler) ProxyREST(w http.ResponseWriter, r *http.Request) {
 	switch instance.Type {
 	case models.InstanceTypePostgres:
 		upstreamHost = k8s.PostgRESTUpstream(project.ID, instance.Name)
-	case models.InstanceTypeMySQL:
-		upstreamHost = k8s.MySQLRESTUpstream(project.ID, instance.Name)
 	default:
 		h.writeError(w, http.StatusBadRequest, "instance type does not support REST")
 		return

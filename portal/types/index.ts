@@ -152,7 +152,7 @@ export interface ProjectWithKeys {
 
 // ─── Stages ───────────────────────────────────────────────────────────────────
 
-export type InstanceType = 'postgres' | 'mysql' | 'redis' | 'mongo'
+export type InstanceType = 'postgres' | 'redis' | 'mongo'
 
 export interface Stage {
   id:           string
@@ -181,5 +181,5 @@ export interface SchemaPreset {
   label:         string
   description:   string
   schemas:       string[]
-  database_type: 'postgres' | 'mysql'
+  database_type: 'postgres'
 }

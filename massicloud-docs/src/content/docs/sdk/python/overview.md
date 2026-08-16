@@ -10,7 +10,7 @@ import { Badge } from '@astrojs/starlight/components'
 The official Python SDK for MassiCloud is under development. It will support:
 
 - Authentication
-- Postgres or MySQL queries via a fluent query builder — same calls either way
+- Postgres queries via a fluent query builder
 - Async support (asyncio)
 - Type hints throughout
 

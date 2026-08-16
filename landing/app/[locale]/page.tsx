@@ -105,7 +105,7 @@ export default async function HomePage({
             </div>
 
             <div className="mt-6 space-y-4">
-              {['postgres', 'mysql', 'redis', 'storage'].map((service) => (
+              {['postgres', 'redis', 'storage'].map((service) => (
                 <div key={service} className="rounded-2xl border border-border bg-bg-panel p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>

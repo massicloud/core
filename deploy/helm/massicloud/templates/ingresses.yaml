@@ -81,7 +81,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
     traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-api-cors@kubernetescrd
-    # Tenant provisioning (e.g. creating a MySQL instance) can legitimately
+    # Tenant provisioning (e.g. creating a database instance) can legitimately
     # hold a request open for a few minutes — make sure Traefik doesn't cut
     # it off before the API's own 5-minute handler timeout does.
     traefik.ingress.kubernetes.io/service.serverstransport: {{ .Release.Namespace }}-api-long-timeout@kubernetescrd

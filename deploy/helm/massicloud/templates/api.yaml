@@ -88,14 +88,10 @@ spec:
         # Backing-service images for tenant provisioning.
         - name: POSTGRES_IMAGE
           value: {{ .Values.backingImages.postgres | quote }}
-        - name: MYSQL_IMAGE
-          value: {{ .Values.backingImages.mysql | quote }}
         - name: REDIS_IMAGE
           value: {{ .Values.backingImages.redis | quote }}
         - name: POSTGREST_IMAGE
           value: {{ .Values.backingImages.postgrest | quote }}
-        - name: MYSQL_REST_IMAGE
-          value: "{{ .Values.images.mysqlRest.repository }}:{{ .Values.images.mysqlRest.tag }}"
         resources:
 {{ toYaml .Values.api.resources | indent 10 }}
         readinessProbe:

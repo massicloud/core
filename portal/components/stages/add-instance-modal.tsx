@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button"
 import { InstanceFormFields } from "./instance-form-fields"
 import type { InstanceType } from "@/types"
 
-function defaultPresetFor(type: InstanceType) {
-  return type === 'mysql' ? 'blank' : 'auth_basic'
+function defaultPresetFor(_type: InstanceType) {
+  return 'auth_basic'
 }
 
 function hasSchemaPresets(type: InstanceType) {
-  return type === 'postgres' || type === 'mysql'
+  return type === 'postgres'
 }
 
 interface Props {

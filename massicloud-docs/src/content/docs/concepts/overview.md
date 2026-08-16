@@ -9,7 +9,7 @@ MassiCloud is organized around a small set of core ideas. Understanding them mak
 
 A **project** is the top-level container. One project per app. It owns:
 
-- One or more **databases** (Postgres or MySQL) and **Redis** instances
+- One or more **databases** (Postgres) and **Redis** instances
 - **Storage buckets** for files
 - **API keys** (anon + service)
 - **End-users** (your app's customers)
@@ -18,7 +18,7 @@ A **project** is the top-level container. One project per app. It owns:
 
 ## Databases
 
-Every database is a managed instance with a REST API auto-generated on top — Postgres via PostgREST, or [MySQL](/concepts/mysql) via MassiCloud's own lightweight REST sidecar. You interact with it via the SDK or directly via HTTP. You can also connect with any Postgres/MySQL client for migrations, queries, etc.
+Every database is a managed Postgres instance with a REST API auto-generated on top via PostgREST. You interact with it via the SDK or directly via HTTP. You can also connect with any Postgres client for migrations, queries, etc.
 
 ## Authentication
 

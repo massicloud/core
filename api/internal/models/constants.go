@@ -3,7 +3,6 @@ package models
 // Instance types
 const (
 	InstanceTypePostgres = "postgres"
-	InstanceTypeMySQL    = "mysql"
 	InstanceTypeRedis    = "redis"
 	InstanceTypeMinio    = "minio"
 )

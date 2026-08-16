@@ -7,7 +7,7 @@ description: Comment MassiCloud organise vos ressources.
 
 Un projet est l'unité organisationnelle de haut niveau dans MassiCloud. Pensez-y comme une application. Un projet possède :
 
-- Des bases de données (Postgres, MySQL) et des instances Redis
+- Des bases de données (Postgres) et des instances Redis
 - Des buckets de stockage
 - Des clés API (anon et service)
 - Des comptes utilisateurs finaux
@@ -27,11 +27,11 @@ La clé service est affichée **une seule fois** à la création. Stockez-la imm
 
 ## Bases de données
 
-Chaque base de données dans un projet est soit une instance Postgres, soit une instance [MySQL](/fr/concepts/mysql) — choisie à la création. Vous pouvez avoir plusieurs bases par projet, de l'un ou l'autre type (ex. un Postgres `production` aux côtés d'un MySQL `legacy`).
+Chaque base de données dans un projet est une instance Postgres, créée à la création du projet. Vous pouvez avoir plusieurs bases par projet.
 
 ### Le schéma `auth`
 
-Le schéma `auth` et tout ce qui en découle (RLS, `auth.uid()`, etc.) s'applique aux bases **Postgres**. Les bases MySQL utilisent un modèle à deux rôles plus simple — voir [Authentification : instances MySQL](/fr/concepts/authentication).
+Le schéma `auth` et tout ce qui en découle (RLS, `auth.uid()`, etc.) s'applique à vos bases Postgres.
 
 Quand vous activez le schéma auth, MassiCloud crée :
 

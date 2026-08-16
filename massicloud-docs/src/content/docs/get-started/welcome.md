@@ -19,7 +19,7 @@ This guide walks you through getting up and running with MassiCloud in about 10 
 
 MassiCloud is an opinionated Backend-as-a-Service. Instead of stitching together your own auth, database, and storage, you get all three as a single integrated platform:
 
-- **Managed Postgres or MySQL** — every project gets a Postgres database by default, with an auto-generated REST API on top; add [MySQL](/concepts/mysql) databases alongside it whenever you need one
+- **Managed Postgres** — every project gets a Postgres database by default, with an auto-generated REST API on top
 - **Authentication** — sign your users up and in with a few SDK calls, with JSON Web Tokens and Row Level Security baked in
 - **Object storage** — S3-compatible buckets for files, with presigned URLs
 - **Sovereignty** — all data stays in Algerian datacenters, compliant with Law 18-07 and 25-11

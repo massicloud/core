@@ -3,7 +3,7 @@ title: Clés API
 description: Comprendre les clés anon et service de MassiCloud.
 ---
 
-Chaque projet possède deux clés API, partagées entre toutes les bases du projet — Postgres comme [MySQL](/fr/concepts/mysql). Elles déterminent le rôle utilisé pour les requêtes et contrôlent l'accès à vos données. Le reste de cette page décrit le modèle de rôle Postgres/RLS ; les bases MySQL utilisent un modèle à deux rôles plus simple, sans équivalent RLS — voir [Authentification : instances MySQL](/fr/concepts/authentication).
+Chaque projet possède deux clés API, partagées entre toutes les bases du projet. Elles déterminent le rôle utilisé pour les requêtes et contrôlent l'accès à vos données.
 
 ## Clé anon (`mc_anon_…`)
 

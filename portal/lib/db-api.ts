@@ -374,18 +374,6 @@ export async function runQuery(
   }
 }
 
-export async function runMySQLQuery(
-  instanceId: string,
-  sql: string
-): Promise<QueryResult> {
-  try {
-    const response = await api.post(`/mysql/${instanceId}/query`, { sql })
-    return response.data
-  } catch (error) {
-    throw new Error(getErrorMessage(error))
-  }
-}
-
 // ============ SCHEMA INIT ============
 
 export async function getSchemas(instanceId: string): Promise<string[]> {

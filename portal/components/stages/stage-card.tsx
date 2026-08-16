@@ -120,7 +120,6 @@ export function StageCard({ stage, projectId }: Props) {
                   instance={inst}
                   onOpen={() => {
                     if (inst.type === 'postgres') router.push(`/postgres/${inst.id}/explore`)
-                    if (inst.type === 'mysql') router.push(`/mysql/${inst.id}`)
                   }}
                   onDelete={() => setConfirmDeleteInst(inst)}
                 />
@@ -208,9 +207,8 @@ function InstanceRow({
   const Icon       = instance.type === 'redis' ? Activity : Database
   const colorClass =
     instance.type === 'postgres' ? 'text-[#3B82F6]' :
-    instance.type === 'mysql'    ? 'text-[#F29111]' :
     'text-[#EF4444]'
-  const isExplorable = instance.type === 'postgres' || instance.type === 'mysql'
+  const isExplorable = instance.type === 'postgres'
 
   return (
     <div className="group flex items-center justify-between gap-3 bg-[#0A0A0A] border border-[#1F1F23] hover:border-[#27272A] rounded-lg px-3 py-2.5 transition-colors">

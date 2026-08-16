@@ -49,10 +49,6 @@ This bypasses all RLS — use it from trusted server-side code only.
 
 If you accidentally leak a service key, rotate it immediately from the portal's API Keys page.
 
-## MySQL instances: no per-row auth
-
-Everything above describes Postgres, where Row Level Security lets `anon` and `authenticated` see different rows of the *same* table. MySQL has no RLS equivalent, so [MySQL databases](/concepts/mysql) only have two roles: `massi_anon` (read-only, every row) and `massi_service` (full access). There's no `authenticated` role and no per-user row filtering — if you need that, filter in your application code, or use Postgres.
-
 ## End-user authentication
 
 End-users — the actual customers of your app — sign up and sign in via the auth endpoints. The SDK wraps these:

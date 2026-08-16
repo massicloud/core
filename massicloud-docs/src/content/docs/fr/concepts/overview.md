@@ -9,7 +9,7 @@ MassiCloud s'articule autour d'un petit ensemble d'idées centrales. Les compren
 
 Un **projet** est le conteneur de haut niveau. Un projet par application. Il possède :
 
-- Une ou plusieurs **bases de données** (Postgres ou MySQL) et des instances **Redis**
+- Une ou plusieurs **bases de données** (Postgres) et des instances **Redis**
 - Des **buckets de stockage** pour les fichiers
 - Des **clés API** (anon + service)
 - Des **utilisateurs finaux** (les clients de votre application)
@@ -18,7 +18,7 @@ Un **projet** est le conteneur de haut niveau. Un projet par application. Il pos
 
 ## Bases de données
 
-Chaque base de données est une instance managée avec une API REST auto-générée — Postgres via PostgREST, ou [MySQL](/fr/concepts/mysql) via le service REST léger propre à MassiCloud. Vous interagissez avec elle via le SDK ou directement en HTTP. Vous pouvez aussi vous connecter avec n'importe quel client Postgres/MySQL pour les migrations, requêtes, etc.
+Chaque base de données est une instance Postgres managée avec une API REST auto-générée via PostgREST. Vous interagissez avec elle via le SDK ou directement en HTTP. Vous pouvez aussi vous connecter avec n'importe quel client Postgres pour les migrations, requêtes, etc.
 
 ## Authentification
 

@@ -10,7 +10,7 @@ import { Badge } from '@astrojs/starlight/components'
 The official Dart/Flutter SDK for MassiCloud is under development. It will support:
 
 - Authentication (signUp, signIn, signOut)
-- Postgres or MySQL queries with a Dart-native query builder — same calls either way
+- Postgres queries with a Dart-native query builder
 - Realtime subscriptions
 - File storage
 

@@ -6,9 +6,7 @@ import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Cloud, AlertCircle, Eye, EyeOff } from "lucide-react"
-import axios from "axios"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+import { register, getErrorMessage } from "@/lib/api"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -24,18 +22,10 @@ export default function RegisterPage() {
     setError("")
     setLoading(true)
     try {
-      await axios.post(`${API_URL}/auth/register`, {
-        email,
-        password,
-        full_name: fullName,
-      })
+      await register(email, password, fullName)
       router.push("/login")
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setError(err.response.data.error)
-      } else {
-        setError("Registration failed")
-      }
+    } catch (err) {
+      setError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -64,6 +54,8 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="fullName"
+                autoFocus
+                autoComplete="name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Mohamed Amine"
@@ -79,6 +71,7 @@ export default function RegisterPage() {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -95,6 +88,8 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -111,6 +106,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+              <p className="text-[#52525B] text-[11px]">At least 8 characters</p>
             </div>
 
             {error && (

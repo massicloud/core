@@ -15,12 +15,12 @@ import { InstanceFormFields } from "./instance-form-fields"
 import { INSTANCE_PROVISION_KEY, type InstanceProvisionVars } from "@/lib/instance-provisioning"
 import type { InstanceType, CreateInstanceForStageRequest } from "@/types"
 
-function defaultPresetFor(type: InstanceType) {
-  return type === 'mysql' ? 'blank' : 'auth_basic'
+function defaultPresetFor(_type: InstanceType) {
+  return 'auth_basic'
 }
 
 function hasSchemaPresets(type: InstanceType) {
-  return type === 'postgres' || type === 'mysql'
+  return type === 'postgres'
 }
 
 interface Props {

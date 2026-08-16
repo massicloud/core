@@ -25,10 +25,8 @@ type Config struct {
 	// Backing-service images — configurable so Helm can pin/override them
 	// without a code change.
 	PostgresImage  string // e.g. "postgres:16-alpine"
-	MySQLImage     string // e.g. "mysql:8.4"
 	RedisImage     string // e.g. "redis:7-alpine"
 	PostgRESTImage string // e.g. "postgrest/postgrest:v12.2.3"
-	MySQLRESTImage string // e.g. "ghcr.io/mikaminou/massicloud-mysql-rest:0.1.0"
 }
 
 func New(logger *slog.Logger, cfg Config) (*Client, error) {

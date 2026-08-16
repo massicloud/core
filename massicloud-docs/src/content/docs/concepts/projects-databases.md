@@ -7,7 +7,7 @@ description: How MassiCloud organizes your resources.
 
 A project is the top-level organizational unit in MassiCloud. Think of it as one application. A project owns:
 
-- Databases (Postgres, MySQL) and Redis instances
+- Databases (Postgres) and Redis instances
 - Storage buckets
 - API keys (anon and service)
 - End-user accounts
@@ -27,11 +27,11 @@ The service key is shown **once** at creation. Store it in your secrets manager 
 
 ## Databases
 
-Each database within a project is either a Postgres instance or a [MySQL](/concepts/mysql) instance — chosen when you create it. You can have multiple databases per project, of either type (e.g., a Postgres `production` alongside a MySQL `legacy`).
+Each database within a project is a Postgres instance, created when you create it. You can have multiple databases per project.
 
 ### The `auth` schema
 
-The `auth` schema and everything below it (RLS, `auth.uid()`, etc.) applies to **Postgres** databases. MySQL databases use a simpler two-role model instead — see [Authentication: MySQL instances](/concepts/authentication#mysql-instances-no-per-row-auth).
+The `auth` schema and everything below it (RLS, `auth.uid()`, etc.) applies to your Postgres databases.
 
 When you enable the auth schema on a database, MassiCloud creates:
 

@@ -7,11 +7,7 @@ Filters narrow which rows are returned by `.select()`, updated by `.update()`, o
 
 ## Reference
 
-Every filter below works against Postgres. See the compatibility notes
-underneath for what's different when the database is
-[MySQL](/concepts/mysql) instead — its mysql-rest sidecar implements a
-smaller, PostgREST-compatible subset. Unsupported filters aren't silently
-dropped: mysql-rest returns a `400` explaining what it didn't understand.
+Every filter below works against Postgres.
 
 | Method                          | SQL equivalent                    |
 | ------------------------------- | --------------------------------- |
@@ -28,13 +24,6 @@ dropped: mysql-rest returns a `400` explaining what it didn't understand.
 | `.contains('col', [a])`         | `col @> ARRAY[a]` (array column)  |
 | `.containedBy('col', [a, b])`   | `col <@ ARRAY[a, b]`              |
 | `.filter('col', 'op', value)`   | Escape hatch for arbitrary ops    |
-
-**On MySQL:** `.eq`, `.neq`, `.gt`, `.gte`, `.lt`, `.lte`, `.like`, `.is`, and
-`.in` all work. `.ilike` has no case-insensitive equivalent — use `.like()`
-(MySQL's default collation is already case-insensitive for most text
-columns). `.contains` / `.containedBy` are Postgres array operators and
-aren't available. `.filter()` only recognizes the operators in the table
-above, not arbitrary raw PostgREST syntax.
 
 ## Examples
 

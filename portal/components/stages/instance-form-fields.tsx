@@ -15,7 +15,6 @@ import type { SchemaPreset, InstanceType } from "@/types"
 
 const INSTANCE_TYPES = [
   { value: 'postgres' as const, label: 'Postgres', icon: Database, color: '#3B82F6', enabled: true },
-  { value: 'mysql'    as const, label: 'MySQL',    icon: Database, color: '#F29111', enabled: true },
   { value: 'redis'    as const, label: 'Redis',    icon: Activity, color: '#EF4444', enabled: true },
   { value: 'mongo'    as const, label: 'MongoDB',  icon: Database, color: '#22C55E', enabled: false, hint: 'Coming soon' },
 ]

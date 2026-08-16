@@ -40,7 +40,7 @@
     "hero": {
       "title": "La plateforme développeur souveraine pour l'Algérie",
       "subtitle": "Une plateforme applicative souveraine qui combine une infrastructure souveraine et une expérience développeur de type BaaS pour les entreprises et fondateurs algériens.",
-      "description": "Postgres managé, MySQL, Redis, stockage d'objets compatible S3, authentification, outillage conformité et control plane qui abstrait la complexité Kubernetes (service roles, frontières de tenancy et opérations) afin que les données clients restent sur le sol algérien et sous droit algérien.",
+      "description": "Postgres managé, Redis, stockage d'objets compatible S3, authentification, outillage conformité et control plane qui abstrait la complexité Kubernetes (service roles, frontières de tenancy et opérations) afin que les données clients restent sur le sol algérien et sous droit algérien.",
       "primaryCta": "Commencer",
       "secondaryCta": "Découvrir la plateforme"
     },
@@ -53,7 +53,7 @@
       "services": {
         "label": "Services actifs",
         "value": "6 / 18",
-        "description": "Postgres managé, MySQL managé, Redis managé, stockage compatible S3, authentification et setup de conformité sont disponibles dès aujourd'hui."
+        "description": "Postgres managé, Redis managé, stockage compatible S3, authentification et setup de conformité sont disponibles dès aujourd'hui."
       },
       "compliance": {
         "label": "Conformité & Audit",
@@ -68,11 +68,6 @@
       "postgres": {
         "title": "Postgres managé",
         "description": "Explorateur de base, éditeur SQL, outils de schéma, sauvegardes, restauration, export et import.",
-        "status": "Disponible"
-      },
-      "mysql": {
-        "title": "MySQL managé",
-        "description": "MySQL 8.4 avec CRUD REST et une console SQL, en option de premier ordre aux côtés de Postgres.",
         "status": "Disponible"
       },
       "redis": {
@@ -172,13 +167,12 @@
     },
     "seo": {
       "title": "MassiCloud — La plateforme cloud souveraine pour l'Algérie",
-      "description": "MassiCloud est la plateforme développeur souveraine pour l'Algérie, réunissant Postgres managé, MySQL, Redis, stockage compatible S3 et infrastructure pensée pour la conformité, le tout sur Kubernetes.",
+      "description": "MassiCloud est la plateforme développeur souveraine pour l'Algérie, réunissant Postgres managé, Redis, stockage compatible S3 et infrastructure pensée pour la conformité, le tout sur Kubernetes.",
       "keywords": [
         "MassiCloud",
         "cloud Algérie",
         "cloud souverain Algérie",
         "Postgres managé Algérie",
-        "MySQL managé Algérie",
         "stockage S3 Algérie",
         "loi 18-07 cloud"
       ]
@@ -205,13 +199,6 @@
           "point1": "Explorateur visuel avec schémas, tables, colonnes, index, clés étrangères et ERD.",
           "point2": "Éditeur SQL, édition de lignes, imports/exports et workflows multi-onglets dans le portail.",
           "point3": "Sauvegardes, restauration vers une nouvelle instance, rétention et schémas d'initialisation."
-        },
-        "mysql": {
-          "title": "MySQL managé",
-          "description": "MySQL 8.4 comme option de base de données à part entière aux côtés de Postgres, avec la même ergonomie REST-sur-HTTP et SDK.",
-          "point1": "CRUD REST et filtrage compatible PostgREST via un sidecar mysql-rest dédié par instance.",
-          "point2": "Console SQL dans le portail avec des requêtes de démarrage rapide spécifiques à MySQL.",
-          "point3": "Sauvegardes et parité complète de l'explorateur de schéma avec Postgres restent au programme."
         },
         "redis": {
           "title": "Redis managé",
@@ -338,7 +325,7 @@
     "architecture": {
       "eyebrow": "Comment c'est construit",
       "title": "Une stack pragmatique pensée d'abord pour la fiabilité",
-      "subtitle": "MassiCloud s'appuie volontairement sur une architecture opérationnelle sobre : Go, Kubernetes, Postgres, MySQL, Redis, MinIO et un portail Next.js moderne.",
+      "subtitle": "MassiCloud s'appuie volontairement sur une architecture opérationnelle sobre : Go, Kubernetes, Postgres, Redis, MinIO et un portail Next.js moderne.",
       "cards": {
         "controlPlane": {
           "title": "Un control plane Go unique",
@@ -346,7 +333,7 @@
         },
         "tenantRuntime": {
           "title": "Runtime tenant natif Kubernetes",
-          "description": "Les tenants Postgres et MySQL tournent en StatefulSets dans des namespaces Kubernetes isolés par projet, chacun avec son sidecar REST (PostgREST ou mysql-rest)."
+          "description": "Les tenants Postgres tournent en StatefulSets dans des namespaces Kubernetes isolés par projet, chacun avec son sidecar PostgREST."
         },
         "storageFabric": {
           "title": "Fabric de stockage partagé",
@@ -367,11 +354,10 @@
     },
     "seo": {
       "title": "Plateforme — Infrastructure souveraine managée pour l'Algérie",
-      "description": "Découvrez la plateforme MassiCloud : Postgres managé, MySQL, Redis, stockage d'objets, une architecture de control plane native Kubernetes et les prochains services cloud souverains pour l'Algérie.",
+      "description": "Découvrez la plateforme MassiCloud : Postgres managé, Redis, stockage d'objets, une architecture de control plane native Kubernetes et les prochains services cloud souverains pour l'Algérie.",
       "keywords": [
         "plateforme MassiCloud",
         "Postgres managé",
-        "MySQL managé",
         "Redis managé",
         "stockage d'objets",
         "plateforme développeur Algérie"
@@ -450,7 +436,7 @@
         },
         "migration": {
           "question": "Peut-on migrer depuis des services cloud étrangers ?",
-          "answer": "Oui. Postgres managé supporte déjà export, import, sauvegardes et restauration (la migration MySQL se fait aujourd'hui via un accès SQL direct, le même outillage arrive prochainement). L'accompagnement de migration devient plus fort dans les offres Growth et Enterprise."
+          "answer": "Oui. Postgres managé supporte déjà export, import, sauvegardes et restauration. L'accompagnement de migration devient plus fort dans les offres Growth et Enterprise."
         }
       }
     },
@@ -612,7 +598,7 @@
         "services": {
           "label": "Services actifs",
           "value": "6 / 18",
-          "description": "Postgres, MySQL, Redis, stockage d'objets, authentification et outillage conformité constituent la base active pour les clients pilotes."
+          "description": "Postgres, Redis, stockage d'objets, authentification et outillage conformité constituent la base active pour les clients pilotes."
         },
         "compliance": {
           "label": "Conformité & Audit",
@@ -650,7 +636,7 @@
           "summary": "Couvrir les grands modèles de bases utilisés par les équipes algériennes sur applications nouvelles et legacy.",
           "theme": "Plus de bases & intégration IA",
           "point1": "MongoDB en service managé avec explorateur de documents, sauvegardes et restauration.",
-          "point2": "Sauvegardes MySQL, restauration et parité complète de l'explorateur de schéma — le CRUD REST et la console SQL sont déjà livrés.",
+          "point2": "Récupération à un instant précis et réplication des sauvegardes entre régions, en complément des outils de restauration déjà livrés pour Postgres.",
           "point3": "Intégration souveraine de modèles LLM avec endpoints d'inférence hébergés en Algérie."
         },
         "q22027": {

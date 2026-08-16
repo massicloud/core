@@ -3,7 +3,7 @@ title: API Keys
 description: Understanding MassiCloud's anon and service keys.
 ---
 
-Every project has two API keys, shared across every database in the project — Postgres and [MySQL](/concepts/mysql) alike. They determine the role used for requests and control access to your data. The rest of this page describes the Postgres role/RLS model; MySQL databases use a simpler two-role model with no RLS equivalent — see [Authentication: MySQL instances](/concepts/authentication#mysql-instances-no-per-row-auth).
+Every project has two API keys, shared across every database in the project. They determine the role used for requests and control access to your data.
 
 ## Anon key (`mc_anon_…`)
 

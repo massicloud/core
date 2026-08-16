@@ -54,8 +54,9 @@ func (h *Handler) ListStages(w http.ResponseWriter, r *http.Request) {
 
 // CreateStage handles POST /projects/{id}/stages
 func (h *Handler) CreateStage(w http.ResponseWriter, r *http.Request) {
-	// MySQL's first boot (StatefulSet readiness + schema + mysql-rest
-	// Deployment readiness) can take several minutes; see createMySQLInstance.
+	// A tenant Postgres StatefulSet's first boot (readiness + schema
+	// preset application + PostgREST Deployment readiness) can take a
+	// couple of minutes.
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
 	defer cancel()
 
@@ -198,8 +199,9 @@ func (h *Handler) SetStageProtected(w http.ResponseWriter, r *http.Request) {
 
 // AddInstanceToStage handles POST /projects/{id}/stages/{stage_name}/instances
 func (h *Handler) AddInstanceToStage(w http.ResponseWriter, r *http.Request) {
-	// MySQL's first boot (StatefulSet readiness + schema + mysql-rest
-	// Deployment readiness) can take several minutes; see createMySQLInstance.
+	// A tenant Postgres StatefulSet's first boot (readiness + schema
+	// preset application + PostgREST Deployment readiness) can take a
+	// couple of minutes.
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
 	defer cancel()
 
@@ -404,13 +406,11 @@ func (h *Handler) createInstanceInStage(
 	switch req.Type {
 	case models.InstanceTypePostgres:
 		return h.createPostgresInstance(ctx, project, stageID, req)
-	case models.InstanceTypeMySQL:
-		return h.createMySQLInstance(ctx, project, stageID, req)
 	case models.InstanceTypeRedis:
 		return h.createRedisInstance(ctx, project, stageID, req)
 	default:
 		return models.Instance{}, &errBadRequest{
-			msg: "type must be 'postgres', 'mysql', or 'redis'",
+			msg: "type must be 'postgres' or 'redis'",
 		}
 	}
 }
@@ -555,110 +555,6 @@ func (h *Handler) provisionPostgREST(
 	return nil
 }
 
-// createMySQLInstance provisions a tenant MySQL StatefulSet+Service and its
-// mysql-rest sidecar on k8s, then persists the instance record. This is a
-// brand-new path (no legacy leniency to preserve), so — unlike Postgres —
-// schema and mysql-rest provisioning failures roll back the MySQL instance
-// and return an error rather than continuing best-effort.
-func (h *Handler) createMySQLInstance(
-	ctx context.Context,
-	project models.Project,
-	stageID string,
-	req models.CreateInstanceForStageRequest,
-) (models.Instance, error) {
-	instanceID := uuid.New().String()
-
-	rootPass, err := generateSecret()
-	if err != nil {
-		return models.Instance{}, fmt.Errorf("generate mysql root password: %w", err)
-	}
-	anonPass, err := generateSecret()
-	if err != nil {
-		return models.Instance{}, fmt.Errorf("generate mysql anon password: %w", err)
-	}
-	servicePass, err := generateSecret()
-	if err != nil {
-		return models.Instance{}, fmt.Errorf("generate mysql service password: %w", err)
-	}
-
-	const dbName = "appdb" // fixed for v1
-
-	myRef, err := h.k8s.CreateTenantMySQL(ctx, k8s.CreateMySQLRequest{
-		ProjectID:       project.ID,
-		InstanceName:    req.Name,
-		RootPassword:    rootPass,
-		AnonPassword:    anonPass,
-		ServicePassword: servicePass,
-		DatabaseName:    dbName,
-		MemoryMB:        req.MemoryMB,
-	})
-	if err != nil {
-		return models.Instance{}, fmt.Errorf("create mysql: %w", err)
-	}
-
-	preset := req.SchemaPreset
-	if preset == "" {
-		preset = "blank"
-	}
-	if err := h.initService.ApplyMySQLPreset(ctx, myRef.RootDSN, preset); err != nil {
-		_ = h.k8s.DeleteTenantMySQL(context.Background(), project.ID, req.Name)
-		return models.Instance{}, fmt.Errorf("apply schema preset %q: %w", preset, err)
-	}
-
-	// mysql-rest authenticates callers via the same short-lived role JWT
-	// PostgREST already trusts (see provisionPostgREST above), never the
-	// platform's bcrypt-hashed anon/service keys — those can't be recovered.
-	if _, err := h.k8s.CreateMySQLRESTForInstance(ctx, k8s.CreateMySQLRESTRequest{
-		ProjectID:    project.ID,
-		InstanceName: req.Name,
-		AnonDSN:      myRef.AnonDSN,
-		ServiceDSN:   myRef.ServiceDSN,
-		JWTSecret:    project.JWTSigningSecret,
-	}); err != nil {
-		_ = h.k8s.DeleteTenantMySQL(context.Background(), project.ID, req.Name)
-		return models.Instance{}, fmt.Errorf("create mysql-rest: %w", err)
-	}
-
-	memMB := req.MemoryMB
-	if memMB <= 0 {
-		memMB = 512
-	}
-
-	inst := models.Instance{
-		ID:             instanceID,
-		StageID:        stageID,
-		Type:           req.Type,
-		Name:           req.Name,
-		ContainerID:    "",
-		DSN:            myRef.RootDSN, // used by the SQL console query endpoint
-		MemoryMB:       memMB,
-		BackupSchedule: "daily",
-		RetentionDays:  7,
-		CreatedAt:      time.Now(),
-	}
-	if err := h.store.CreateInstance(ctx, inst); err != nil {
-		_ = h.k8s.DeleteTenantMySQLREST(context.Background(), project.ID, req.Name)
-		_ = h.k8s.DeleteTenantMySQL(context.Background(), project.ID, req.Name)
-		return models.Instance{}, err
-	}
-
-	// mysql-rest has no per-instance container id to persist — reuse
-	// PostgRESTContainerID as a generic "REST provisioned" marker, matching
-	// the REST proxy's not-yet-provisioned gate for Postgres instances.
-	if err := h.store.SetPostgRESTContainer(ctx, instanceID, "mysql-rest-"+req.Name); err != nil {
-		h.logger.Warn("failed to record mysql-rest provisioning",
-			slog.String("instance_id", instanceID), slog.Any("error", err))
-	}
-
-	h.logger.Info("instance created",
-		slog.String("instance_id", instanceID),
-		slog.String("stage_id", stageID),
-		slog.String("type", req.Type),
-		slog.String("name", req.Name),
-	)
-	return inst, nil
-}
-
 // createRedisInstance provisions a tenant Redis StatefulSet + NodePort
 // Service on k8s and persists the instance record. No REST sidecar and no
 // schema presets — per concepts/redis.md, the customer's own app connects
@@ -720,7 +616,7 @@ func (h *Handler) createRedisInstance(
 // teardownInstance removes the k8s resources backing an instance.
 func (h *Handler) teardownInstance(ctx context.Context, inst models.Instance) {
 	switch inst.Type {
-	case models.InstanceTypePostgres, models.InstanceTypeMySQL, models.InstanceTypeRedis:
+	case models.InstanceTypePostgres, models.InstanceTypeRedis:
 	default:
 		return
 	}
@@ -743,15 +639,6 @@ func (h *Handler) teardownInstance(ctx context.Context, inst models.Instance) {
 				slog.String("instance_id", inst.ID), slog.Any("error", err))
 		}
 		h.initService.RemovePool(inst.ID)
-	case models.InstanceTypeMySQL:
-		if err := h.k8s.DeleteTenantMySQLREST(ctx, project.ID, inst.Name); err != nil {
-			h.logger.Warn("teardown: delete mysql-rest error",
-				slog.String("instance_id", inst.ID), slog.Any("error", err))
-		}
-		if err := h.k8s.DeleteTenantMySQL(ctx, project.ID, inst.Name); err != nil {
-			h.logger.Warn("teardown: delete mysql error",
-				slog.String("instance_id", inst.ID), slog.Any("error", err))
-		}
 	case models.InstanceTypeRedis:
 		if err := h.k8s.DeleteTenantRedis(ctx, project.ID, inst.Name); err != nil {
 			h.logger.Warn("teardown: delete redis error",
@@ -782,10 +669,10 @@ func validateInstanceRequest(req models.CreateInstanceForStageRequest) error {
 		return err
 	}
 	switch req.Type {
-	case models.InstanceTypePostgres, models.InstanceTypeMySQL, models.InstanceTypeRedis:
+	case models.InstanceTypePostgres, models.InstanceTypeRedis:
 		return nil
 	default:
-		return &errBadRequest{msg: "type must be 'postgres', 'mysql', or 'redis'"}
+		return &errBadRequest{msg: "type must be 'postgres' or 'redis'"}
 	}
 }
 

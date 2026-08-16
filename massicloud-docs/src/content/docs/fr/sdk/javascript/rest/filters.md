@@ -7,11 +7,7 @@ Les filtres restreignent les lignes retournées par `.select()`, mises à jour p
 
 ## Référence
 
-Chaque filtre ci-dessous fonctionne avec Postgres. Voir les notes de compatibilité
-en dessous pour ce qui change avec [MySQL](/fr/concepts/mysql) — son sidecar
-mysql-rest implémente un sous-ensemble plus restreint, compatible PostgREST. Les
-filtres non supportés ne sont jamais silencieusement ignorés : mysql-rest
-retourne une erreur `400` expliquant ce qu'il n'a pas compris.
+Chaque filtre ci-dessous fonctionne avec Postgres.
 
 | Méthode                         | Équivalent SQL                    |
 | ------------------------------- | --------------------------------- |
@@ -28,14 +24,6 @@ retourne une erreur `400` expliquant ce qu'il n'a pas compris.
 | `.contains('col', [a])`         | `col @> ARRAY[a]` (colonne array) |
 | `.containedBy('col', [a, b])`   | `col <@ ARRAY[a, b]`              |
 | `.filter('col', 'op', value)`   | Échappatoire pour des ops arbitraires |
-
-**Sur MySQL :** `.eq`, `.neq`, `.gt`, `.gte`, `.lt`, `.lte`, `.like`, `.is` et
-`.in` fonctionnent tous. `.ilike` n'a pas d'équivalent insensible à la casse —
-utilisez `.like()` (la collation par défaut de MySQL est déjà insensible à la
-casse pour la plupart des colonnes texte). `.contains` / `.containedBy` sont
-des opérateurs de tableau propres à Postgres et ne sont pas disponibles.
-`.filter()` ne reconnaît que les opérateurs du tableau ci-dessus, pas une
-syntaxe PostgREST brute arbitraire.
 
 ## Exemples
 

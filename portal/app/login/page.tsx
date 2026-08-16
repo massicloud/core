@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { login, getErrorMessage } from "@/lib/api"
@@ -8,6 +8,14 @@ import { setToken, getSavedEmail, saveRememberEmail, clearRememberEmail } from "
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Cloud, AlertCircle, Eye, EyeOff } from "lucide-react"
+
+// Only ever redirect back to a same-site path — an unvalidated `redirect`
+// query param would otherwise be an open-redirect vector.
+function safeRedirect(target: string | null): string {
+  if (!target) return "/dashboard"
+  if (!target.startsWith("/") || target.startsWith("//")) return "/dashboard"
+  return target
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,6 +25,13 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [expired, setExpired] = useState(false)
+  // Query params are browser-only state here on purpose: reading them via
+  // useSearchParams() would force this otherwise-static page through a
+  // Suspense boundary, and Next ships those as an empty shell on first
+  // load (BAILOUT_TO_CLIENT_SIDE_RENDERING) until JS hydrates — i.e. a
+  // blank page. Plain window.location keeps the page fully server-rendered.
+  const redirectTarget = useRef<string | null>(null)
 
   // Pre-fill saved email on mount
   useEffect(() => {
@@ -25,6 +40,9 @@ export default function LoginPage() {
       setEmail(saved)
       setRememberMe(true)
     }
+    const params = new URLSearchParams(window.location.search)
+    setExpired(params.get("reason") === "expired")
+    redirectTarget.current = params.get("redirect")
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -39,7 +57,7 @@ export default function LoginPage() {
         clearRememberEmail()
       }
       setToken(response.token, rememberMe)
-      router.push("/dashboard")
+      router.push(safeRedirect(redirectTarget.current))
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -63,6 +81,14 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-[#111113] border border-[#27272A] rounded-xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+          {expired && !error && (
+            <div className="flex items-start gap-2.5 bg-[#D4A843]/8 border border-[#D4A843]/20 rounded-lg px-3 py-2.5 mb-4">
+              <AlertCircle size={14} className="text-[#D4A843] shrink-0 mt-0.5" />
+              <span className="text-[#D4A843] text-xs leading-relaxed">
+                Your session expired. Please sign in again.
+              </span>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
@@ -72,6 +98,8 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
+                autoFocus
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -89,6 +117,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

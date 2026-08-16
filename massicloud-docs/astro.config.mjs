@@ -56,7 +56,6 @@ export default defineConfig({
             { label: 'API Keys',                 slug: 'concepts/api-keys' },
             { label: 'Object Storage',           slug: 'concepts/object-storage' },
             { label: 'Redis Cache',              slug: 'concepts/redis' },
-            { label: 'MySQL',                    slug: 'concepts/mysql', translations: { fr: 'MySQL', ar: 'MySQL' } },
             { label: 'Sovereignty & Compliance', slug: 'concepts/sovereignty' },
           ],
         },

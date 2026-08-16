@@ -49,10 +49,6 @@ Cela contourne toutes les RLS — utilisez-le uniquement depuis du code serveur 
 
 Si vous faites fuiter une clé service, faites-la pivoter immédiatement depuis la page Clés API du portail.
 
-## Instances MySQL : pas d'auth par ligne
-
-Tout ce qui précède décrit Postgres, où Row Level Security permet à `anon` et `authenticated` de voir des lignes différentes de la *même* table. MySQL n'a pas d'équivalent RLS, donc les [bases de données MySQL](/fr/concepts/mysql) n'ont que deux rôles : `massi_anon` (lecture seule, toutes les lignes) et `massi_service` (accès complet). Il n'y a pas de rôle `authenticated` ni de filtrage par ligne par utilisateur — si vous en avez besoin, filtrez dans le code de votre application, ou utilisez Postgres.
-
 ## Authentification des utilisateurs finaux
 
 Les utilisateurs finaux s'inscrivent et se connectent via les endpoints auth. Le SDK les enveloppe :

@@ -5,7 +5,7 @@ type SchemaPreset struct {
 	Label        string   `json:"label"`
 	Description  string   `json:"description"`
 	Schemas      []string `json:"schemas"`
-	DatabaseType string   `json:"database_type"` // "postgres" or "mysql"
+	DatabaseType string   `json:"database_type"` // "postgres"
 }
 
 var Presets = map[string]SchemaPreset{
@@ -37,8 +37,7 @@ func GetPreset(id string) (SchemaPreset, bool) {
 	return p, ok
 }
 
-// ListPresets returns every Postgres preset. Use ListAllPresets for a
-// combined, database_type-tagged list covering Postgres and MySQL.
+// ListPresets returns every Postgres preset.
 func ListPresets() []SchemaPreset {
 	order := []string{"blank", "auth_basic", "auth_audit_compliance"}
 	result := make([]SchemaPreset, 0, len(order))
@@ -48,10 +47,9 @@ func ListPresets() []SchemaPreset {
 	return result
 }
 
-// ListAllPresets returns Postgres presets followed by MySQL presets, each
-// tagged with database_type so the portal can filter by the selected
-// instance type.
+// ListAllPresets returns every schema preset, tagged with database_type so
+// the portal can filter by the selected instance type. Postgres is
+// currently the only supported instance type with schema presets.
 func ListAllPresets() []SchemaPreset {
-	all := ListPresets()
-	return append(all, ListMySQLPresets()...)
+	return ListPresets()
 }

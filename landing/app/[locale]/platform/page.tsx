@@ -23,7 +23,6 @@ import {
   ReceiptText,
   Scale,
   Send,
-  Server,
   ServerCog,
   Shield,
   ShieldCheck,
@@ -48,7 +47,6 @@ export default async function PlatformPage({
 
   const liveServices = [
     { key: 'postgres', icon: Database },
-    { key: 'mysql', icon: Server },
     { key: 'redis', icon: HardDrive },
     { key: 'storage', icon: FileStack },
     { key: 'auth', icon: ShieldCheck },
