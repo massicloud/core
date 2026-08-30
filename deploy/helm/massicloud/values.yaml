@@ -7,18 +7,21 @@ domain:
 # Container images (bump when you build new versions)
 images:
   api:
-    repository: ghcr.io/mikaminou/massicloud-api
-    tag: "0.2.2"
+    repository: ghcr.io/massicloud/massicloud-api
+    tag: "0.1.0"
     pullPolicy: IfNotPresent
   portal:
-    repository: ghcr.io/mikaminou/massicloud-portal
-    tag: "0.2.2"
+    repository: ghcr.io/massicloud/massicloud-portal
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
   landing:
-    repository: ghcr.io/mikaminou/massicloud-landing
-    tag: "0.2.1"
+    repository: ghcr.io/massicloud/massicloud-landing
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
   docs:
-    repository: ghcr.io/mikaminou/massicloud-docs
-    tag: "0.2.1"
+    repository: ghcr.io/massicloud/massicloud-docs
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
 
 # Backing-service images used when the API provisions tenant workloads on
 # k8s (internal/k8s/{postgres,postgrest}.go). Separate from

@@ -83,7 +83,7 @@ export function Nav({ locale }: { locale: Locale }) {
             </Link>
 
             <Link
-              href={`${APP_URL}/signup`}
+              href={`${APP_URL}/register`}
               className="bg-brand-gold hover:bg-brand-gold/90
                          text-bg-deep font-medium text-sm
                          px-4 py-2 rounded-md transition-all
@@ -124,7 +124,7 @@ export function Nav({ locale }: { locale: Locale }) {
                   {t('login')}
                 </Link>
                 <Link
-                  href={`${APP_URL}/signup`}
+                  href={`${APP_URL}/register`}
                   className="rounded-lg bg-brand-gold px-4 py-3 text-center text-sm font-medium text-bg-deep transition-opacity hover:opacity-90"
                 >
                   {t('signup')}
