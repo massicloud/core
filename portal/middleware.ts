@@ -34,11 +34,14 @@ export const config = {
     /*
      * Match all request paths except:
      * - api (API routes)
+     * - auth (calls meant for the backend API origin, misrouted here if
+     *   NEXT_PUBLIC_API_URL isn't baked into the client bundle — let those
+     *   fail as 404 instead of being silently redirected into a 405)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (images, etc.)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api|auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }

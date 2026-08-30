@@ -12,11 +12,11 @@ images:
     pullPolicy: IfNotPresent
   portal:
     repository: ghcr.io/massicloud/massicloud-portal
-    tag: "0.1.0"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
   landing:
     repository: ghcr.io/massicloud/massicloud-landing
-    tag: "0.1.0"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
   docs:
     repository: ghcr.io/massicloud/massicloud-docs
