@@ -48,8 +48,8 @@ func ListPresets() []SchemaPreset {
 }
 
 // ListAllPresets returns every schema preset, tagged with database_type so
-// the portal can filter by the selected instance type. Postgres is
-// currently the only supported instance type with schema presets.
+// the portal can filter by the selected instance type.
 func ListAllPresets() []SchemaPreset {
-	return ListPresets()
+	all := ListPresets()
+	return append(all, ListMongoPresets()...)
 }

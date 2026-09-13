@@ -16,7 +16,7 @@ import type { SchemaPreset, InstanceType } from "@/types"
 const INSTANCE_TYPES = [
   { value: 'postgres' as const, label: 'Postgres', icon: Database, color: '#3B82F6', enabled: true },
   { value: 'redis'    as const, label: 'Redis',    icon: Activity, color: '#EF4444', enabled: true },
-  { value: 'mongo'    as const, label: 'MongoDB',  icon: Database, color: '#22C55E', enabled: false, hint: 'Coming soon' },
+  { value: 'mongo'    as const, label: 'MongoDB',  icon: Database, color: '#22C55E', enabled: true },
 ]
 
 const MEMORY_OPTIONS = [
@@ -24,25 +24,32 @@ const MEMORY_OPTIONS = [
   { value: 512,  label: '512 MB' },
   { value: 1024, label: '1 GB'   },
   { value: 2048, label: '2 GB'   },
+  { value: 4096, label: '4 GB'   },
 ]
 
+const MIN_STORAGE_GB = 5
+const MAX_STORAGE_GB = 100
+
 interface Props {
-  type:           InstanceType
-  onTypeChange:   (v: InstanceType) => void
-  name:           string
-  onNameChange:   (v: string) => void
-  nameError?:     string | null
-  memoryMB:       number
-  onMemoryChange: (v: number) => void
-  schemaPreset:   string
-  onPresetChange: (v: string) => void
-  presets:        SchemaPreset[]
+  type:            InstanceType
+  onTypeChange:    (v: InstanceType) => void
+  name:            string
+  onNameChange:    (v: string) => void
+  nameError?:      string | null
+  memoryMB:        number
+  onMemoryChange:  (v: number) => void
+  storageGB:       number
+  onStorageChange: (v: number) => void
+  schemaPreset:    string
+  onPresetChange:  (v: string) => void
+  presets:         SchemaPreset[]
 }
 
 export function InstanceFormFields({
   type, onTypeChange,
   name, onNameChange, nameError,
   memoryMB, onMemoryChange,
+  storageGB, onStorageChange,
   schemaPreset, onPresetChange,
   presets,
 }: Props) {
@@ -58,7 +65,6 @@ export function InstanceFormFields({
                 key={t.value}
                 type="button"
                 disabled={!t.enabled}
-                title={t.hint}
                 onClick={() => t.enabled && onTypeChange(t.value)}
                 className={cn(
                   "flex-1 flex items-center gap-2 h-9 px-3 rounded-md border transition-all text-sm",
@@ -71,7 +77,6 @@ export function InstanceFormFields({
               >
                 <Icon size={12} style={{ color: t.enabled ? t.color : undefined }} />
                 {t.label}
-                {t.hint && <span className="text-[10px] text-[#52525B]">({t.hint})</span>}
               </button>
             )
           })}
@@ -107,6 +112,25 @@ export function InstanceFormFields({
           </SelectContent>
         </Select>
       </FormField>
+
+      {/* Storage — only Mongo has a configurable PVC size today (Postgres/
+          Redis use fixed sizes). */}
+      {type === 'mongo' && (
+        <FormField label="Storage" hint={`${MIN_STORAGE_GB}–${MAX_STORAGE_GB} GiB`}>
+          <TextInput
+            value={String(storageGB)}
+            onChange={(v) => {
+              const n = parseInt(v, 10)
+              if (!isNaN(n)) {
+                onStorageChange(Math.min(MAX_STORAGE_GB, Math.max(MIN_STORAGE_GB, n)))
+              } else if (v === '') {
+                onStorageChange(MIN_STORAGE_GB)
+              }
+            }}
+            placeholder="10"
+          />
+        </FormField>
+      )}
 
       {/* Schema preset — filtered to the selected database type */}
       {(() => {

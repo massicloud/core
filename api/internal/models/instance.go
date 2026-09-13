@@ -22,5 +22,6 @@ type Instance struct {
 	RetentionDays         int       `json:"retention_days" db:"retention_days"`
 	PostgRESTContainerID  string    `json:"-"              db:"postgrest_container_id"`
 	AuthenticatorPassword string    `json:"-"              db:"authenticator_password"`
+	ReadonlyDSN           string    `json:"-"              db:"readonly_dsn"`
 	CreatedAt             time.Time `json:"created_at"     db:"created_at"`
 }

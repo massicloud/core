@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button"
 import { InstanceFormFields } from "./instance-form-fields"
 import type { InstanceType } from "@/types"
 
-function defaultPresetFor(_type: InstanceType) {
-  return 'auth_basic'
+function defaultPresetFor(type: InstanceType) {
+  return type === 'mongo' ? 'blank' : 'auth_basic'
 }
 
 function hasSchemaPresets(type: InstanceType) {
-  return type === 'postgres'
+  return type === 'postgres' || type === 'mongo'
 }
 
 interface Props {
@@ -32,6 +32,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
   const [type,         setType]         = useState<InstanceType>('postgres')
   const [name,         setName]         = useState('main')
   const [memoryMB,     setMemoryMB]     = useState(512)
+  const [storageGB,    setStorageGB]    = useState(10)
   const [schemaPreset, setSchemaPreset] = useState('auth_basic')
 
   const { data: presets = [] } = useQuery({
@@ -45,6 +46,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
 
   interface Vars extends InstanceProvisionVars {
     memoryMB: number
+    storageGB?: number
     schemaPreset?: string
   }
 
@@ -61,6 +63,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
         name:          vars.name,
         type:          vars.type as InstanceType,
         memory_mb:     vars.memoryMB,
+        storage_gb:    vars.storageGB,
         schema_preset: vars.schemaPreset,
       }),
     onSuccess: (_instance, vars) => {
@@ -76,6 +79,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
     setType('postgres')
     setName('main')
     setMemoryMB(512)
+    setStorageGB(10)
     setSchemaPreset('auth_basic')
   }
 
@@ -83,6 +87,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
     mutate({
       name, type, stageName, hasInstance: true,
       memoryMB,
+      storageGB: type === 'mongo' ? storageGB : undefined,
       schemaPreset: hasSchemaPresets(type) ? schemaPreset : undefined,
     })
     reset()
@@ -115,6 +120,7 @@ export function AddInstanceModal({ open, onClose, projectId, stageName }: Props)
         type={type}           onTypeChange={(t) => { setType(t); setSchemaPreset(defaultPresetFor(t)) }}
         name={name}           onNameChange={setName}    nameError={nameError}
         memoryMB={memoryMB}   onMemoryChange={setMemoryMB}
+        storageGB={storageGB} onStorageChange={setStorageGB}
         schemaPreset={schemaPreset} onPresetChange={setSchemaPreset}
         presets={presets}
       />

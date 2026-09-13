@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -75,6 +76,7 @@ func main() {
 		PostgresImage:  cfg.PostgresImage,
 		RedisImage:     cfg.RedisImage,
 		PostgRESTImage: cfg.PostgRESTImage,
+		MongoImage:     cfg.MongoImage,
 	})
 	if err != nil {
 		slog.Error("failed to initialize k8s client", "error", err)
@@ -116,7 +118,13 @@ func main() {
 	// legitimately take 2-4 minutes on first boot) always failed: the
 	// request got killed at 30s no matter what the handler asked for.
 
-	// CORS middleware
+	// CORS middleware. The portal's production origin is derived from
+	// cfg.DomainSuffix (not hardcoded) so this can't silently drift from
+	// wherever the portal is actually deployed — a Traefik-level CORS
+	// middleware also exists in the Helm chart, but this is the one that
+	// actually matters if that layer isn't in effect for any reason, so it
+	// must independently allow the real production origin rather than only
+	// localhost dev ports.
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:3000",
@@ -126,6 +134,7 @@ func main() {
 			"http://localhost:3004",
 			"http://localhost:3005",
 			"http://localhost:3030",
+			fmt.Sprintf("https://app.%s", cfg.DomainSuffix),
 		},
 		AllowedMethods: []string{
 			"GET", "POST", "PUT", "PATCH",
@@ -249,6 +258,32 @@ func main() {
 		r.Route("/redis", func(r chi.Router) {
 			r.Get("/", h.ListRedis)
 			r.Delete("/{id}", h.DeleteRedis)
+		})
+
+		// Mongo management (scoped to project via query param)
+		r.Route("/mongo", func(r chi.Router) {
+			r.Get("/", h.ListMongo)
+			r.Delete("/{id}", h.DeleteMongo)
+
+			r.Route("/{id}/collections", func(r chi.Router) {
+				r.Get("/", h.GetMongoCollections)
+				r.Post("/", h.CreateMongoCollection)
+				r.Route("/{name}", func(r chi.Router) {
+					r.Delete("/", h.DeleteMongoCollection)
+					r.Route("/documents", func(r chi.Router) {
+						r.Get("/", h.GetMongoDocuments)
+						r.Post("/", h.InsertMongoDocument)
+						r.Patch("/{docId}", h.UpdateMongoDocument)
+						r.Delete("/{docId}", h.DeleteMongoDocument)
+					})
+					r.Route("/indexes", func(r chi.Router) {
+						r.Get("/", h.GetMongoIndexes)
+						r.Post("/", h.CreateMongoIndex)
+						r.Delete("/{indexName}", h.DeleteMongoIndex)
+					})
+				})
+			})
+			r.Post("/{id}/query", h.RunMongoQuery)
 		})
 
 		// Storage — buckets and objects

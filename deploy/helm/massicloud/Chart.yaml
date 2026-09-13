@@ -1,6 +1,6 @@
 apiVersion: v2
-name: massicloud
-description: The sovereign developer platform for Algeria
+name: massiCloud
+description: The cloud sovereign developer platform for Algeria
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

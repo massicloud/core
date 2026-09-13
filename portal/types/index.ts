@@ -168,6 +168,9 @@ export interface CreateInstanceForStageRequest {
   type:           InstanceType
   memory_mb:      number
   schema_preset?: string
+  // Only used for instance types with configurable storage (currently
+  // mongo — postgres/redis have fixed PVC sizes).
+  storage_gb?:    number
 }
 
 export interface CreateStageRequest {
@@ -181,5 +184,55 @@ export interface SchemaPreset {
   label:         string
   description:   string
   schemas:       string[]
-  database_type: 'postgres'
+  database_type: 'postgres' | 'mongo'
+}
+
+// ─── Mongo ────────────────────────────────────────────────────────────────────
+
+export interface MongoInstance {
+  id:              string
+  stage_id:        string
+  type:            'mongo'
+  name:            string
+  database_name:   string
+  service_dsn:     string
+  readonly_dsn:    string
+  memory_mb:       number
+  backup_schedule: string
+  retention_days:  number
+  created_at:      string
+}
+
+export interface MongoCollection {
+  name:        string
+  count:       number
+  size:        number
+  avgObjSize:  number
+  indexes:     number
+}
+
+export interface MongoDocumentsResult {
+  documents: Record<string, unknown>[]
+  total:     number
+  page:      number
+}
+
+export interface MongoIndex {
+  name:   string
+  keys:   Record<string, unknown>
+  unique: boolean
+  sparse: boolean
+}
+
+export interface CreateMongoIndexRequest {
+  name?:         string
+  keys:          Record<string, 1 | -1>
+  unique?:       boolean
+  sparse?:       boolean
+  ttl_seconds?:  number
+}
+
+export interface MongoQueryResult {
+  result:   unknown
+  took_ms:  number
 }

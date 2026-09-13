@@ -315,6 +315,16 @@ func (s *Store) SetAuthenticatorPassword(ctx context.Context, instanceID, passwo
 	return nil
 }
 
+func (s *Store) SetReadonlyDSN(ctx context.Context, instanceID, dsn string) error {
+	_, err := s.pool.Exec(ctx,
+		`UPDATE instances SET readonly_dsn = $1 WHERE id = $2`,
+		dsn, instanceID)
+	if err != nil {
+		return fmt.Errorf("store: set readonly dsn: %w", err)
+	}
+	return nil
+}
+
 func (s *Store) ListPostgresInstancesWithoutPostgREST(ctx context.Context) ([]models.Instance, error) {
 	instances, err := queryMany[models.Instance](ctx, s.pool, `
 		SELECT * FROM instances

@@ -4,6 +4,7 @@ package models
 const (
 	InstanceTypePostgres = "postgres"
 	InstanceTypeRedis    = "redis"
+	InstanceTypeMongo    = "mongo"
 	InstanceTypeMinio    = "minio"
 )
 

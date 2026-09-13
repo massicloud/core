@@ -14,6 +14,7 @@ import type {
   Instance,
   ListObjectsResult,
   LoginResponse,
+  MongoInstance,
   PresignResponse,
   Project,
   ProjectWithKeys,
@@ -23,7 +24,13 @@ import type {
   User,
 } from "@/types";
 
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// "||" (not "??") is deliberate: the Dockerfile's `ARG NEXT_PUBLIC_API_URL`
+// resolves to an empty string (not undefined) when --build-arg isn't passed
+// at image-build time, and "??" only falls back on null/undefined — it lets
+// "" straight through, silently turning every API call into a same-origin
+// relative request. This has broken prod three times from a missed
+// --build-arg flag; don't revert it back to "??".
+const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 export const API_URL_STORAGE_KEY = "massicloud-api-url";
 
 function normalizeBaseUrl(url: string) {
@@ -209,6 +216,26 @@ export async function createRedisInstance(req: CreateInstanceRequest): Promise<I
 
 export async function deleteRedisInstance(id: string): Promise<void> {
   await api.delete(`/redis/${id}`);
+}
+
+// ============ MONGO ============
+// No create call here — unlike this module's postgres/redis functions above
+// (which POST to endpoints main.go doesn't actually register), instance
+// creation for every type goes through the stage-based
+// addInstanceToStage() below, the only creation endpoint that exists.
+
+export async function getMongoInstances(projectId?: string): Promise<MongoInstance[]> {
+  if (projectId) {
+    const response = await api.get<MongoInstance[]>("/mongo", {
+      params: { project_id: projectId },
+    });
+    return response.data;
+  }
+  return [];
+}
+
+export async function deleteMongoInstance(id: string): Promise<void> {
+  await api.delete(`/mongo/${id}`);
 }
 
 // ============ HEALTH ============

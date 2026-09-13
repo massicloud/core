@@ -10,6 +10,7 @@ import (
 	"github.com/mikaminou/massicloud/api/internal/config"
 	"github.com/mikaminou/massicloud/api/internal/initschemas"
 	"github.com/mikaminou/massicloud/api/internal/k8s"
+	"github.com/mikaminou/massicloud/api/internal/mongoclient"
 	"github.com/mikaminou/massicloud/api/internal/proxy"
 	"github.com/mikaminou/massicloud/api/internal/storage"
 	"github.com/mikaminou/massicloud/api/internal/store"
@@ -25,6 +26,7 @@ type Handler struct {
 	initService   *initschemas.Service
 	backupService *backup.Service
 	proxy         *proxy.PostgresProxy
+	mongo         *mongoclient.Manager
 }
 
 func New(
@@ -48,6 +50,7 @@ func New(
 		initService:   initSvc,
 		backupService: backupSvc,
 		proxy:         dbProxy,
+		mongo:         mongoclient.NewManager(),
 	}
 }
 

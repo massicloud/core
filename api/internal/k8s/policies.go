@@ -10,7 +10,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (c *Client) ApplyTenantResourceQuota(ctx context.Context, projectID string, cpu, memoryMB int) error {
+// TenantQuota describes the hard resource caps for a tenant namespace. All
+// four compute fields are set deliberately (not just requests.cpu +
+// limits.memory, which is what this used to enforce) — a Kubernetes
+// ResourceQuota only requires containers to declare the specific fields
+// present in the quota itself, so setting all four here is what makes every
+// container in internal/k8s/ need a complete ResourceProfile.
+type TenantQuota struct {
+	RequestsCPU    string // e.g. "2"
+	LimitsCPU      string // e.g. "8"
+	RequestsMemory string // e.g. "2Gi"
+	LimitsMemory   string // e.g. "8Gi"
+	PVCs           string // e.g. "20"
+	Pods           string // e.g. "50"
+}
+
+// DefaultTenantQuota accommodates at least 2 Postgres (default memory) + 1
+// Mongo + 1 Redis + their sidecars (PostgREST) for a typical tenant.
+var DefaultTenantQuota = TenantQuota{
+	RequestsCPU:    "2",
+	LimitsCPU:      "8",
+	RequestsMemory: "2Gi",
+	LimitsMemory:   "8Gi",
+	PVCs:           "20",
+	Pods:           "50",
+}
+
+func (c *Client) ApplyTenantResourceQuota(ctx context.Context, projectID string, q TenantQuota) error {
 	ns := TenantNamespaceName(projectID)
 	quota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{
@@ -19,15 +45,35 @@ func (c *Client) ApplyTenantResourceQuota(ctx context.Context, projectID string,
 		},
 		Spec: corev1.ResourceQuotaSpec{
 			Hard: corev1.ResourceList{
-				corev1.ResourceRequestsCPU:            resource.MustParse(fmt.Sprintf("%d", cpu)),
-				corev1.ResourceLimitsMemory:           resource.MustParse(fmt.Sprintf("%dMi", memoryMB)),
-				corev1.ResourcePersistentVolumeClaims: resource.MustParse("5"),
+				corev1.ResourceRequestsCPU:            resource.MustParse(q.RequestsCPU),
+				corev1.ResourceLimitsCPU:              resource.MustParse(q.LimitsCPU),
+				corev1.ResourceRequestsMemory:         resource.MustParse(q.RequestsMemory),
+				corev1.ResourceLimitsMemory:           resource.MustParse(q.LimitsMemory),
+				corev1.ResourcePersistentVolumeClaims: resource.MustParse(q.PVCs),
+				corev1.ResourcePods:                   resource.MustParse(q.Pods),
 			},
 		},
 	}
 	_, err := c.cs.CoreV1().ResourceQuotas(ns).Create(ctx, quota, metav1.CreateOptions{})
-	if err != nil && !isAlreadyExists(err) {
+	if err == nil {
+		return nil
+	}
+	if !isAlreadyExists(err) {
 		return fmt.Errorf("create quota: %w", err)
+	}
+	// A quota created before DefaultTenantQuota's caps changed would
+	// otherwise stay stuck on its original (looser or stricter) numbers
+	// forever, since Create is a no-op against an existing object — update
+	// it in place so every tenant converges on the current caps. Update
+	// requires the existing object's ResourceVersion, so fetch it first
+	// rather than blindly PUTting our freshly-built one.
+	existing, err := c.cs.CoreV1().ResourceQuotas(ns).Get(ctx, "default", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("get existing quota: %w", err)
+	}
+	existing.Spec = quota.Spec
+	if _, err := c.cs.CoreV1().ResourceQuotas(ns).Update(ctx, existing, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("update quota: %w", err)
 	}
 	return nil
 }

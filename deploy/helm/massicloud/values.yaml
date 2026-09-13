@@ -8,11 +8,11 @@ domain:
 images:
   api:
     repository: ghcr.io/massicloud/massicloud-api
-    tag: "0.1.0"
+    tag: "0.1.6"
     pullPolicy: IfNotPresent
   portal:
     repository: ghcr.io/massicloud/massicloud-portal
-    tag: "0.1.2"
+    tag: "0.1.4"
     pullPolicy: IfNotPresent
   landing:
     repository: ghcr.io/massicloud/massicloud-landing
@@ -20,7 +20,7 @@ images:
     pullPolicy: IfNotPresent
   docs:
     repository: ghcr.io/massicloud/massicloud-docs
-    tag: "0.1.0"
+    tag: "0.1.1"
     pullPolicy: IfNotPresent
 
 # Backing-service images used when the API provisions tenant workloads on
@@ -30,6 +30,7 @@ backingImages:
   postgres: postgres:16-alpine
   redis: redis:7-alpine
   postgrest: postgrest/postgrest:v12.2.3
+  mongo: percona/percona-server-mongodb:7.0
 
 # Platform Postgres
 platformPostgres:

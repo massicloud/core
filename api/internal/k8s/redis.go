@@ -59,8 +59,6 @@ func (c *Client) CreateTenantRedis(ctx context.Context, req CreateRedisRequest) 
 	if memoryMB <= 0 {
 		memoryMB = 256
 	}
-	memory := resource.MustParse(fmt.Sprintf("%dMi", memoryMB))
-	cpu := resource.MustParse("250m")
 	volSize := resource.MustParse("2Gi")
 
 	sts := &appsv1.StatefulSet{
@@ -100,15 +98,10 @@ func (c *Client) CreateTenantRedis(ctx context.Context, req CreateRedisRequest) 
 							Name:      "data",
 							MountPath: "/data",
 						}},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceMemory: memory,
-								corev1.ResourceCPU:    cpu,
-							},
-							Limits: corev1.ResourceList{
-								corev1.ResourceMemory: memory,
-							},
-						},
+						// DatabaseProfile (not a fixed ProfileRedisDefault) so
+						// this still scales with req.MemoryMB, same as
+						// before this used inline resource.MustParse calls.
+						Resources: DatabaseProfile(memoryMB).ToRequirements(),
 						ReadinessProbe: &corev1.Probe{
 							ProbeHandler: corev1.ProbeHandler{
 								Exec: &corev1.ExecAction{

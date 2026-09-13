@@ -110,6 +110,11 @@ CREATE TABLE IF NOT EXISTS backups (
 CREATE INDEX IF NOT EXISTS idx_backups_instance ON backups(instance_id);
 CREATE INDEX IF NOT EXISTS idx_backups_status   ON backups(status);
 CREATE INDEX IF NOT EXISTS idx_backups_expires  ON backups(expires_at);
+
+-- Mongo instances expose two connection strings (readWrite + readonly);
+-- 'dsn' above holds the readWrite one, this holds the readonly one. Unused
+-- (empty string) for postgres/redis instances.
+ALTER TABLE instances ADD COLUMN IF NOT EXISTS readonly_dsn TEXT NOT NULL DEFAULT '';
 `
 
 func (s *Store) migrate(ctx context.Context) error {

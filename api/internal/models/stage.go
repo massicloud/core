@@ -26,6 +26,10 @@ type CreateInstanceForStageRequest struct {
 	Type         string `json:"type"`
 	MemoryMB     int    `json:"memory_mb"`
 	SchemaPreset string `json:"schema_preset"`
+	// StorageGB is only used by instance types with configurable storage
+	// (currently Mongo — Postgres/Redis have fixed PVC sizes). Zero means
+	// "use the type's default".
+	StorageGB int `json:"storage_gb,omitempty"`
 }
 
 var reservedStageNames = map[string]bool{

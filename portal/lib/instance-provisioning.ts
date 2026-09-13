@@ -42,6 +42,7 @@ export function instanceTypeLabel(type: string): string {
   switch (type) {
     case "postgres": return "Postgres"
     case "redis": return "Redis"
+    case "mongo": return "MongoDB"
     default: return type
   }
 }

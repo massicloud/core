@@ -74,6 +74,7 @@ func (c *Client) CreatePostgRESTForInstance(ctx context.Context, req CreatePostg
 								LocalObjectReference: corev1.LocalObjectReference{Name: name + "-config"},
 							},
 						}},
+						Resources: ProfileProxy.ToRequirements(),
 						ReadinessProbe: &corev1.Probe{
 							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{

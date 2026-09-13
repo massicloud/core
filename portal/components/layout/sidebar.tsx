@@ -51,7 +51,7 @@ const sections: NavSection[] = [
         icon: Database,
         matchPaths: ["/databases", "/postgres"],
       },
-      { label: "MongoDB", icon: Database, soon: true },
+      { href: "/mongo", label: "MongoDB", icon: Database, matchPaths: ["/mongo"] },
     ],
   },
   {

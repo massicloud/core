@@ -120,6 +120,8 @@ export function StageCard({ stage, projectId }: Props) {
                   instance={inst}
                   onOpen={() => {
                     if (inst.type === 'postgres') router.push(`/postgres/${inst.id}/explore`)
+                    else if (inst.type === 'redis') router.push(`/redis/${inst.id}`)
+                    else if (inst.type === 'mongo') router.push(`/mongo/${inst.id}`)
                   }}
                   onDelete={() => setConfirmDeleteInst(inst)}
                 />

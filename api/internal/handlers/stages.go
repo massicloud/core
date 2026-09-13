@@ -17,6 +17,7 @@ import (
 	"github.com/mikaminou/massicloud/api/internal/k8s"
 	"github.com/mikaminou/massicloud/api/internal/middleware"
 	"github.com/mikaminou/massicloud/api/internal/models"
+	"github.com/mikaminou/massicloud/api/internal/mongoclient"
 )
 
 // stageResponse is the API shape for a stage — includes its instances.
@@ -368,7 +369,7 @@ func (h *Handler) provisionStage(
 		h.store.DeleteStage(ctx, stage.ID) //nolint:errcheck
 		return models.Stage{}, fmt.Errorf("ensure tenant namespace: %w", err)
 	}
-	if err := h.k8s.ApplyTenantResourceQuota(ctx, project.ID, 4, 4096); err != nil {
+	if err := h.k8s.ApplyTenantResourceQuota(ctx, project.ID, k8s.DefaultTenantQuota); err != nil {
 		h.logger.Warn("apply resource quota failed (continuing)",
 			slog.String("project_id", project.ID), slog.Any("error", err))
 	}
@@ -408,9 +409,11 @@ func (h *Handler) createInstanceInStage(
 		return h.createPostgresInstance(ctx, project, stageID, req)
 	case models.InstanceTypeRedis:
 		return h.createRedisInstance(ctx, project, stageID, req)
+	case models.InstanceTypeMongo:
+		return h.createMongoInstance(ctx, project, stageID, req)
 	default:
 		return models.Instance{}, &errBadRequest{
-			msg: "type must be 'postgres' or 'redis'",
+			msg: "type must be 'postgres', 'redis', or 'mongo'",
 		}
 	}
 }
@@ -613,10 +616,108 @@ func (h *Handler) createRedisInstance(
 	return inst, nil
 }
 
+// createMongoInstance provisions a tenant Mongo StatefulSet+Service on k8s
+// (single-member replica set), bootstraps its replica set + massi_service/
+// massi_readonly application users via the Mongo driver, persists the
+// instance record (both connection strings), and applies a schema preset.
+// No REST sidecar and no SDK wrapper — customers connect with the native
+// Mongo driver directly, same rationale as createRedisInstance.
+func (h *Handler) createMongoInstance(
+	ctx context.Context,
+	project models.Project,
+	stageID string,
+	req models.CreateInstanceForStageRequest,
+) (models.Instance, error) {
+	instanceID := uuid.New().String()
+
+	rootPw, err := generateSecret()
+	if err != nil {
+		return models.Instance{}, fmt.Errorf("generate mongo root password: %w", err)
+	}
+	servicePw, err := generateSecret()
+	if err != nil {
+		return models.Instance{}, fmt.Errorf("generate mongo service password: %w", err)
+	}
+	readonlyPw, err := generateSecret()
+	if err != nil {
+		return models.Instance{}, fmt.Errorf("generate mongo readonly password: %w", err)
+	}
+
+	dbName := "appdb"
+
+	mongoRef, err := h.k8s.CreateTenantMongo(ctx, k8s.CreateMongoRequest{
+		ProjectID:        project.ID,
+		InstanceName:     req.Name,
+		RootPassword:     rootPw,
+		ServicePassword:  servicePw,
+		ReadonlyPassword: readonlyPw,
+		DatabaseName:     dbName,
+		MemoryMB:         req.MemoryMB,
+		StorageGB:        req.StorageGB,
+	})
+	if err != nil {
+		return models.Instance{}, fmt.Errorf("create mongo: %w", err)
+	}
+
+	host := fmt.Sprintf("%s.%s.svc.cluster.local:%d", mongoRef.Service, mongoRef.Namespace, mongoRef.Port)
+	if err := mongoclient.BootstrapReplicaSetAndUsers(ctx, mongoRef.RootDSN, host, dbName, servicePw, readonlyPw); err != nil {
+		_ = h.k8s.DeleteTenantMongo(context.Background(), project.ID, req.Name)
+		return models.Instance{}, fmt.Errorf("bootstrap mongo: %w", err)
+	}
+
+	memMB := req.MemoryMB
+	if memMB <= 0 {
+		memMB = 512
+	}
+
+	inst := models.Instance{
+		ID:             instanceID,
+		StageID:        stageID,
+		Type:           req.Type,
+		Name:           req.Name,
+		ContainerID:    "", // no docker container id — provisioned on k8s
+		DSN:            mongoRef.ServiceDSN,
+		MemoryMB:       memMB,
+		BackupSchedule: "disabled",
+		RetentionDays:  0,
+		CreatedAt:      time.Now(),
+	}
+	if err := h.store.CreateInstance(ctx, inst); err != nil {
+		_ = h.k8s.DeleteTenantMongo(context.Background(), project.ID, req.Name)
+		return models.Instance{}, err
+	}
+	if err := h.store.SetReadonlyDSN(ctx, instanceID, mongoRef.ReadonlyDSN); err != nil {
+		h.logger.Error("failed to save mongo readonly dsn",
+			slog.String("instance_id", instanceID), slog.Any("error", err))
+	}
+
+	// Apply schema preset (non-fatal — logged and skipped on failure), same
+	// pattern as Postgres.
+	preset := req.SchemaPreset
+	if preset == "" {
+		preset = "blank"
+	}
+	if err := initschemas.ApplyMongoPreset(ctx, mongoRef.ServiceDSN, dbName, preset); err != nil {
+		h.logger.Error("mongo schema preset apply failed (continuing)",
+			slog.String("instance_id", instanceID),
+			slog.String("preset", preset),
+			slog.Any("error", err),
+		)
+	}
+
+	h.logger.Info("instance created",
+		slog.String("instance_id", instanceID),
+		slog.String("stage_id", stageID),
+		slog.String("type", req.Type),
+		slog.String("name", req.Name),
+	)
+	return inst, nil
+}
+
 // teardownInstance removes the k8s resources backing an instance.
 func (h *Handler) teardownInstance(ctx context.Context, inst models.Instance) {
 	switch inst.Type {
-	case models.InstanceTypePostgres, models.InstanceTypeRedis:
+	case models.InstanceTypePostgres, models.InstanceTypeRedis, models.InstanceTypeMongo:
 	default:
 		return
 	}
@@ -644,6 +745,12 @@ func (h *Handler) teardownInstance(ctx context.Context, inst models.Instance) {
 			h.logger.Warn("teardown: delete redis error",
 				slog.String("instance_id", inst.ID), slog.Any("error", err))
 		}
+	case models.InstanceTypeMongo:
+		if err := h.k8s.DeleteTenantMongo(ctx, project.ID, inst.Name); err != nil {
+			h.logger.Warn("teardown: delete mongo error",
+				slog.String("instance_id", inst.ID), slog.Any("error", err))
+		}
+		h.mongo.Remove(inst.ID)
 	}
 }
 
@@ -669,10 +776,10 @@ func validateInstanceRequest(req models.CreateInstanceForStageRequest) error {
 		return err
 	}
 	switch req.Type {
-	case models.InstanceTypePostgres, models.InstanceTypeRedis:
+	case models.InstanceTypePostgres, models.InstanceTypeRedis, models.InstanceTypeMongo:
 		return nil
 	default:
-		return &errBadRequest{msg: "type must be 'postgres' or 'redis'"}
+		return &errBadRequest{msg: "type must be 'postgres', 'redis', or 'mongo'"}
 	}
 }
 

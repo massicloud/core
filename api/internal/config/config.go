@@ -26,6 +26,7 @@ type Config struct {
 	PostgresImage  string
 	RedisImage     string
 	PostgRESTImage string
+	MongoImage     string
 }
 
 func Load() (*Config, error) {
@@ -103,6 +104,10 @@ func Load() (*Config, error) {
 	if postgrestImage == "" {
 		postgrestImage = "postgrest/postgrest:v12.2.3"
 	}
+	mongoImage := os.Getenv("MONGO_IMAGE")
+	if mongoImage == "" {
+		mongoImage = "percona/percona-server-mongodb:7.0"
+	}
 
 	apiBaseURL := os.Getenv("API_BASE_URL")
 	if apiBaseURL == "" {
@@ -126,5 +131,6 @@ func Load() (*Config, error) {
 		PostgresImage:  postgresImage,
 		RedisImage:     redisImage,
 		PostgRESTImage: postgrestImage,
+		MongoImage:     mongoImage,
 	}, nil
 }

@@ -27,6 +27,7 @@ type Config struct {
 	PostgresImage  string // e.g. "postgres:16-alpine"
 	RedisImage     string // e.g. "redis:7-alpine"
 	PostgRESTImage string // e.g. "postgrest/postgrest:v12.2.3"
+	MongoImage     string // e.g. "percona/percona-server-mongodb:7.0"
 }
 
 func New(logger *slog.Logger, cfg Config) (*Client, error) {

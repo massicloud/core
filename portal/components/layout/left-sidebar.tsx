@@ -92,6 +92,7 @@ export function LeftSidebar() {
 
   const pgInstances = (currentStage?.instances ?? []).filter((i) => i.type === "postgres")
   const redisInstances = (currentStage?.instances ?? []).filter((i) => i.type === "redis")
+  const mongoInstances = (currentStage?.instances ?? []).filter((i) => i.type === "mongo")
 
   return (
     <aside className="fixed top-[52px] left-0 bottom-0 w-[248px] bg-[#0D0D10] border-r border-[#1E1E24] z-30 flex flex-col">
@@ -148,8 +149,20 @@ export function LeftSidebar() {
                   />
                 ))}
 
+                {/* Mongo instances */}
+                {mongoInstances.map((inst) => (
+                  <NavItem
+                    key={inst.id}
+                    href={`/mongo/${inst.id}`}
+                    icon={Database}
+                    label={inst.name}
+                    matchPaths={[`/mongo/${inst.id}`]}
+                    iconColor="#22C55E"
+                  />
+                ))}
+
                 {/* Empty stage */}
-                {pgInstances.length === 0 && redisInstances.length === 0 && (
+                {pgInstances.length === 0 && redisInstances.length === 0 && mongoInstances.length === 0 && (
                   <Link
                     href={`/projects/${currentProject.id}/stages`}
                     className="mx-2 flex items-center gap-2 h-8 px-3 rounded-lg text-[12px] text-[#374151] hover:text-[#52525B] hover:bg-[#161616] transition-all border border-dashed border-[#1F1F23] hover:border-[#27272A]"

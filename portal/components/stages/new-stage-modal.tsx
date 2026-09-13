@@ -15,12 +15,12 @@ import { InstanceFormFields } from "./instance-form-fields"
 import { INSTANCE_PROVISION_KEY, type InstanceProvisionVars } from "@/lib/instance-provisioning"
 import type { InstanceType, CreateInstanceForStageRequest } from "@/types"
 
-function defaultPresetFor(_type: InstanceType) {
-  return 'auth_basic'
+function defaultPresetFor(type: InstanceType) {
+  return type === 'mongo' ? 'blank' : 'auth_basic'
 }
 
 function hasSchemaPresets(type: InstanceType) {
-  return type === 'postgres'
+  return type === 'postgres' || type === 'mongo'
 }
 
 interface Props {
@@ -38,6 +38,7 @@ export function NewStageModal({ open, onClose, projectId }: Props) {
   const [dbType,       setDbType]       = useState<InstanceType>('postgres')
   const [dbName,       setDbName]       = useState('main')
   const [memoryMB,     setMemoryMB]     = useState(512)
+  const [storageGB,    setStorageGB]    = useState(10)
   const [schemaPreset, setSchemaPreset] = useState('auth_basic')
 
   const { data: presets = [] } = useQuery({
@@ -85,6 +86,7 @@ export function NewStageModal({ open, onClose, projectId }: Props) {
     setDbType('postgres')
     setDbName('main')
     setMemoryMB(512)
+    setStorageGB(10)
     setSchemaPreset('auth_basic')
   }
 
@@ -97,6 +99,7 @@ export function NewStageModal({ open, onClose, projectId }: Props) {
             name:          dbName,
             type:          dbType,
             memory_mb:     memoryMB,
+            storage_gb:    dbType === 'mongo' ? storageGB : undefined,
             schema_preset: hasSchemaPresets(dbType) ? schemaPreset : undefined,
           }
         : undefined,
@@ -176,6 +179,7 @@ export function NewStageModal({ open, onClose, projectId }: Props) {
               type={dbType}           onTypeChange={(t) => { setDbType(t); setSchemaPreset(defaultPresetFor(t)) }}
               name={dbName}           onNameChange={setDbName}    nameError={dbNameError}
               memoryMB={memoryMB}     onMemoryChange={setMemoryMB}
+              storageGB={storageGB}   onStorageChange={setStorageGB}
               schemaPreset={schemaPreset} onPresetChange={setSchemaPreset}
               presets={presets}
             />

@@ -50,8 +50,6 @@ func (c *Client) CreateTenantPostgres(ctx context.Context, req CreatePostgresReq
 	if memoryMB <= 0 {
 		memoryMB = 512
 	}
-	memory := resource.MustParse(fmt.Sprintf("%dMi", memoryMB))
-	cpu := resource.MustParse("500m")
 
 	volSize := resource.MustParse("5Gi") // start small
 
@@ -94,15 +92,7 @@ func (c *Client) CreateTenantPostgres(ctx context.Context, req CreatePostgresReq
 							Name:      "data",
 							MountPath: "/var/lib/postgresql/data",
 						}},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceMemory: memory,
-								corev1.ResourceCPU:    cpu,
-							},
-							Limits: corev1.ResourceList{
-								corev1.ResourceMemory: memory,
-							},
-						},
+						Resources: DatabaseProfile(memoryMB).ToRequirements(),
 						ReadinessProbe: &corev1.Probe{
 							ProbeHandler: corev1.ProbeHandler{
 								Exec: &corev1.ExecAction{
