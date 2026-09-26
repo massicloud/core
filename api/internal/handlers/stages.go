@@ -17,7 +17,6 @@ import (
 	"github.com/mikaminou/massicloud/api/internal/k8s"
 	"github.com/mikaminou/massicloud/api/internal/middleware"
 	"github.com/mikaminou/massicloud/api/internal/models"
-	"github.com/mikaminou/massicloud/api/internal/mongoclient"
 )
 
 // stageResponse is the API shape for a stage — includes its instances.
@@ -617,11 +616,12 @@ func (h *Handler) createRedisInstance(
 }
 
 // createMongoInstance provisions a tenant Mongo StatefulSet+Service on k8s
-// (single-member replica set), bootstraps its replica set + massi_service/
-// massi_readonly application users via the Mongo driver, persists the
-// instance record (both connection strings), and applies a schema preset.
-// No REST sidecar and no SDK wrapper — customers connect with the native
-// Mongo driver directly, same rationale as createRedisInstance.
+// (single-member replica set, initiated and bootstrapped with the
+// massi_service/massi_readonly application users by CreateTenantMongo
+// itself via exec), persists the instance record (both connection
+// strings), and applies a schema preset. No REST sidecar and no SDK
+// wrapper — customers connect with the native Mongo driver directly, same
+// rationale as createRedisInstance.
 func (h *Handler) createMongoInstance(
 	ctx context.Context,
 	project models.Project,
@@ -656,13 +656,8 @@ func (h *Handler) createMongoInstance(
 		StorageGB:        req.StorageGB,
 	})
 	if err != nil {
-		return models.Instance{}, fmt.Errorf("create mongo: %w", err)
-	}
-
-	host := fmt.Sprintf("%s.%s.svc.cluster.local:%d", mongoRef.Service, mongoRef.Namespace, mongoRef.Port)
-	if err := mongoclient.BootstrapReplicaSetAndUsers(ctx, mongoRef.RootDSN, host, dbName, servicePw, readonlyPw); err != nil {
 		_ = h.k8s.DeleteTenantMongo(context.Background(), project.ID, req.Name)
-		return models.Instance{}, fmt.Errorf("bootstrap mongo: %w", err)
+		return models.Instance{}, fmt.Errorf("create mongo: %w", err)
 	}
 
 	memMB := req.MemoryMB

@@ -11,9 +11,10 @@ import (
 )
 
 type Client struct {
-	cs     *kubernetes.Clientset
-	logger *slog.Logger
-	cfg    Config
+	cs         *kubernetes.Clientset
+	restConfig *rest.Config // needed for the SPDY exec client (pod exec), not just the typed REST client
+	logger     *slog.Logger
+	cfg        Config
 }
 
 type Config struct {
@@ -53,5 +54,5 @@ func New(logger *slog.Logger, cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("create clientset: %w", err)
 	}
 
-	return &Client{cs: cs, logger: logger, cfg: cfg}, nil
+	return &Client{cs: cs, restConfig: restCfg, logger: logger, cfg: cfg}, nil
 }

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Globe, ShieldOff, RotateCw, Copy, Check } from "lucide-react"
+import { Globe, ShieldOff, RotateCw, Copy, Check, Eye, EyeOff } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Modal } from "@/components/ui/modal"
@@ -46,6 +46,8 @@ export function KeysCard({ type, keyRecord, projectId }: Props) {
   const { mutate: rotate, isPending } = useMutation({
     mutationFn: () => rotateAPIKey(projectId, type),
     onSuccess: (data) => {
+      navigator.clipboard.writeText(data.full_key)
+      toast.success("New key copied to clipboard")
       setRotatedKey(data)
       setShowRotate(false)
       queryClient.invalidateQueries({ queryKey: ["api-keys", projectId] })
@@ -104,19 +106,19 @@ export function KeysCard({ type, keyRecord, projectId }: Props) {
             </button>
           </div>
 
-          {/* Key display (prefix only) with copy */}
+          {/* Key display (prefix only, not a usable value) */}
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-[#0A0A0A] border border-[#1F1F23] rounded px-3 py-2.5 font-mono text-xs">
               <span className="text-[#A1A1AA]">{keyRecord.key_prefix}</span>
               <span className="text-[#3B3B3B]">…</span>
             </div>
-            <CopyPrefixButton value={keyRecord.key_prefix + "…"} />
           </div>
 
           {/* Hint */}
           <p className="text-[10px] text-[#3B3B3B] mt-1.5">
-            Full key hidden — click{" "}
-            <span className="text-[#52525B]">Rotate &amp; copy</span> to generate a new one you can save.
+            This is only an identifying prefix, not the full key — MassiCloud never stores or
+            displays it again. Click{" "}
+            <span className="text-[#52525B]">Rotate &amp; copy</span> to generate a new usable key.
           </p>
 
           {/* Metadata */}
@@ -184,6 +186,7 @@ function RotatedKeyReveal({
   onAcknowledge: () => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [revealed, setRevealed] = useState(false)
   const [acknowledged, setAcknowledged] = useState(false)
 
   function copy() {
@@ -207,8 +210,15 @@ function RotatedKeyReveal({
       >
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-[#111111] border border-[#1F1F23] rounded px-3 py-2 font-mono text-xs text-white overflow-x-auto whitespace-nowrap">
-            {apiKey.full_key}
+            {revealed ? apiKey.full_key : maskKey(apiKey.full_key)}
           </div>
+          <button
+            onClick={() => setRevealed((r) => !r)}
+            title={revealed ? "Hide key" : "Show key"}
+            className="shrink-0 h-9 w-9 flex items-center justify-center bg-[#1A1A1A] hover:bg-[#27272A] border border-[#27272A] rounded text-[#A1A1AA] hover:text-white transition-all"
+          >
+            {revealed ? <EyeOff size={12} /> : <Eye size={12} />}
+          </button>
           <button
             onClick={copy}
             className="shrink-0 h-9 px-3 bg-[#1A1A1A] hover:bg-[#27272A] border border-[#27272A] rounded text-xs font-medium text-[#A1A1AA] hover:text-white transition-all flex items-center gap-1.5"
@@ -247,22 +257,9 @@ function RotatedKeyReveal({
   )
 }
 
-function CopyPrefixButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(value)
-        setCopied(true)
-        toast.success("Prefix copied")
-        setTimeout(() => setCopied(false), 2000)
-      }}
-      title="Copy key prefix"
-      className="shrink-0 h-9 w-9 flex items-center justify-center bg-[#0A0A0A] border border-[#1F1F23] rounded text-[#52525B] hover:text-white hover:border-[#27272A] transition-all"
-    >
-      {copied ? <Check size={12} className="text-[#22C55E]" /> : <Copy size={12} />}
-    </button>
-  )
+function maskKey(key: string): string {
+  const visible = key.split("_").slice(0, 2).join("_") + "_"
+  return visible + "•".repeat(Math.max(key.length - visible.length, 8))
 }
 
 export function KeysCardSkeleton() {

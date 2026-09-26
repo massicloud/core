@@ -12,6 +12,15 @@ rules:
 - apiGroups: [""]
   resources: [namespaces, services, secrets, configmaps, persistentvolumeclaims, resourcequotas]
   verbs: ["*"]
+- apiGroups: [""]
+  # pods: read status while waiting for a fresh Mongo pod to run.
+  # pods/exec: run mongosh inside it to initiate its replica set and create
+  # application users (see internal/k8s/mongo.go, exec.go).
+  resources: [pods]
+  verbs: [get, list, watch]
+- apiGroups: [""]
+  resources: [pods/exec]
+  verbs: [create]
 - apiGroups: ["apps"]
   resources: [statefulsets, deployments]
   verbs: ["*"]

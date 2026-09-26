@@ -76,16 +76,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      // Only force-redirect if the user had an active session (token existed).
-      // On the login page the user has no token yet, so a 401 is a normal
-      // "wrong credentials" response — let the form handle it inline.
-      const hadToken = getToken();
-      if (hadToken) {
+      // Redirect everywhere except the login page itself, where a 401 is a
+      // normal "wrong credentials" response — let the form handle it inline.
+      // Don't gate this on whether a token was present: if it's already
+      // missing (cleared elsewhere, or never attached), that's still a dead
+      // session and the user needs to be sent back to log in, not left on a
+      // page where every request quietly 401s forever.
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         removeToken();
-        if (typeof window !== "undefined") {
-          const redirect = window.location.pathname + window.location.search;
-          window.location.href = `/login?reason=expired&redirect=${encodeURIComponent(redirect)}`;
-        }
+        const redirect = window.location.pathname + window.location.search;
+        window.location.href = `/login?reason=expired&redirect=${encodeURIComponent(redirect)}`;
       }
     }
     return Promise.reject(error);

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { AlertTriangle, Copy, Check } from "lucide-react"
+import { AlertTriangle, Copy, Check, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { APIKeyWithSecret } from "@/types"
 
@@ -111,6 +111,8 @@ function KeyRevealCard({
   onCopy,
   critical,
 }: KeyRevealCardProps) {
+  const [revealed, setRevealed] = useState(false)
+
   return (
     <div
       className="bg-[#0A0A0A] border rounded-lg overflow-hidden"
@@ -138,8 +140,15 @@ function KeyRevealCard({
 
         <div className="flex items-center gap-2">
           <div className="flex-1 bg-[#111111] border border-[#1F1F23] rounded px-3 py-2 font-mono text-xs text-white overflow-x-auto whitespace-nowrap">
-            {fullKey}
+            {revealed ? fullKey : maskKey(fullKey)}
           </div>
+          <button
+            onClick={() => setRevealed((r) => !r)}
+            title={revealed ? "Hide key" : "Show key"}
+            className="shrink-0 h-9 w-9 flex items-center justify-center bg-[#1A1A1A] hover:bg-[#27272A] border border-[#27272A] rounded text-[#A1A1AA] hover:text-white transition-all"
+          >
+            {revealed ? <EyeOff size={12} /> : <Eye size={12} />}
+          </button>
           <button
             onClick={onCopy}
             className="shrink-0 h-9 px-3 bg-[#1A1A1A] hover:bg-[#27272A] border border-[#27272A] rounded text-xs font-medium text-[#A1A1AA] hover:text-white transition-all flex items-center gap-1.5"
@@ -158,4 +167,9 @@ function KeyRevealCard({
       </div>
     </div>
   )
+}
+
+function maskKey(key: string): string {
+  const visible = key.split("_").slice(0, 2).join("_") + "_"
+  return visible + "•".repeat(Math.max(key.length - visible.length, 8))
 }
