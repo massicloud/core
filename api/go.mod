@@ -13,6 +13,7 @@ require (
 	github.com/minio/minio-go/v7 v7.2.0
 	go.mongodb.org/mongo-driver v1.17.9
 	golang.org/x/crypto v0.52.0
+	golang.org/x/time v0.15.0
 	k8s.io/api v0.31.0
 	k8s.io/apimachinery v0.31.0
 	k8s.io/client-go v0.31.0
@@ -71,7 +72,6 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.2 // indirect

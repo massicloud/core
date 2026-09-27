@@ -78,6 +78,43 @@ func normalizePostgresDSN(raw string) string {
 	return raw
 }
 
+// reloadPostgRESTSchema tells PostgREST to reload its schema cache, using the
+// same connection a DDL statement just ran on. PostgREST caches the schema at
+// startup and only refreshes it on this notification, so without it newly
+// created tables/columns 404 until the cache happens to reload on its own.
+// Failure is logged, not surfaced: the DDL itself already succeeded, and the
+// reload-schema endpoint below lets a user retry manually if this is missed.
+func (h *Handler) reloadPostgRESTSchema(ctx context.Context, db *sql.DB, instanceID string) {
+	if _, err := db.ExecContext(ctx, "NOTIFY pgrst, 'reload schema'"); err != nil {
+		h.logger.Warn("failed to notify postgrest of schema reload",
+			"id", instanceID,
+			"error", err,
+		)
+	}
+}
+
+// POST /postgres/{id}/reload-schema
+func (h *Handler) ReloadSchema(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	id := chi.URLParam(r, "id")
+
+	db, err := h.getPostgresConnection(ctx, id)
+	if err != nil {
+		h.writePostgresConnectionError(w, err)
+		return
+	}
+	defer db.Close()
+
+	if _, err := db.ExecContext(ctx, "NOTIFY pgrst, 'reload schema'"); err != nil {
+		h.writeError(w, http.StatusInternalServerError, "failed to reload schema cache")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) writePostgresConnectionError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrPostgresInstanceNotFound):

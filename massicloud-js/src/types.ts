@@ -84,6 +84,12 @@ export type AuthChangeCallback = (event: AuthEvent, session: Session | null) => 
 export interface MassiResponse<T> {
   data: T | null
   error: MassiError | null
+  /**
+   * Total row count matching the query's filters (ignoring limit/offset/
+   * range), when `count` was requested via `.select(cols, { count })`.
+   * `null` if not requested, or if PostgREST couldn't determine it.
+   */
+  count?: number | null
 }
 
 export interface MassiError {

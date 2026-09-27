@@ -1,0 +1,22 @@
+{
+  "name": "massicloud-integration-tests",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:sdk": "vitest run sdk/",
+    "reset": "tsx helpers/reset-schema.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "@massicloud/client": "^0.4.0"
+  }
+}

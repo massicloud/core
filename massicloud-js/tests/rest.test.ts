@@ -182,6 +182,107 @@ describe('REST update', () => {
   })
 })
 
+describe('REST upsert', () => {
+  it('sends POST with merge-duplicates + return=representation and on_conflict param', async () => {
+    let method = '', url = '', body = '', headers: Record<string, string> = {}
+    const client = captureClient((u, init) => {
+      url = u
+      method = init?.method ?? ''
+      body = init?.body as string
+      headers = Object.fromEntries(Object.entries(init?.headers ?? {}) as [string, string][])
+    }, [{ id: 1, email: 'a@b.com' }])
+
+    await client.from('users').upsert({ email: 'a@b.com', name: 'Amina' }, { onConflict: 'email' })
+
+    expect(method).toBe('POST')
+    expect(JSON.parse(body)).toEqual({ email: 'a@b.com', name: 'Amina' })
+    expect(url).toContain('on_conflict=email')
+    expect(headers['Prefer']).toBe('resolution=merge-duplicates,return=representation')
+  })
+
+  it('defaults to merge-duplicates without an onConflict column', async () => {
+    let headers: Record<string, string> = {}
+    let url = ''
+    const client = captureClient((u, init) => {
+      url = u
+      headers = Object.fromEntries(Object.entries(init?.headers ?? {}) as [string, string][])
+    })
+    await client.from('users').upsert({ email: 'a@b.com' })
+    expect(url).not.toContain('on_conflict')
+    expect(headers['Prefer']).toBe('resolution=merge-duplicates,return=representation')
+  })
+
+  it('uses ignore-duplicates when requested', async () => {
+    let headers: Record<string, string> = {}
+    const client = captureClient((_, init) => {
+      headers = Object.fromEntries(Object.entries(init?.headers ?? {}) as [string, string][])
+    })
+    await client.from('users').upsert({ email: 'a@b.com' }, { onConflict: 'email', ignoreDuplicates: true })
+    expect(headers['Prefer']).toBe('resolution=ignore-duplicates,return=representation')
+  })
+
+  it('accepts an array of rows', async () => {
+    let body = ''
+    const client = captureClient((_, init) => { body = init?.body as string })
+    await client.from('users').upsert([{ email: 'a@b.com' }, { email: 'c@d.com' }], { onConflict: 'email' })
+    expect(JSON.parse(body)).toEqual([{ email: 'a@b.com' }, { email: 'c@d.com' }])
+  })
+})
+
+describe('REST count', () => {
+  function clientWithContentRange(contentRange: string | null, bodyText = '[]') {
+    let captured: { url: string; init?: RequestInit } | null = null
+    const client = createClient({
+      url: 'https://api.example.com/v1/proj',
+      key: 'k',
+      stage: 'production',
+      fetch: async (input, init) => {
+        captured = { url: typeof input === 'string' ? input : (input as Request).url, init }
+        const headers = new Headers({ 'content-type': 'application/json' })
+        if (contentRange) headers.set('content-range', contentRange)
+        return new Response(bodyText, { status: 200, headers })
+      },
+      auth: { persistSession: false },
+    })
+    return { client, getCaptured: () => captured }
+  }
+
+  it('sends Prefer: count=exact and parses the total from Content-Range', async () => {
+    const { client, getCaptured } = clientWithContentRange('0-1/47', JSON.stringify([{ id: 1 }, { id: 2 }]))
+    const { data, error, count } = await client.from('orders').select('*', { count: 'exact' }).range(0, 1)
+
+    expect(error).toBeNull()
+    expect(data).toHaveLength(2)
+    expect(count).toBe(47)
+
+    const headers = Object.fromEntries(
+      Object.entries(getCaptured()?.init?.headers ?? {}) as [string, string][],
+    )
+    expect(headers['Prefer']).toBe('count=exact')
+  })
+
+  it('supports head: true to fetch only the count', async () => {
+    const { client, getCaptured } = clientWithContentRange('*/47', '')
+    const { data, count } = await client.from('orders').select('*', { count: 'exact', head: true })
+
+    expect(data).toBeNull()
+    expect(count).toBe(47)
+    expect(getCaptured()?.init?.method).toBe('HEAD')
+  })
+
+  it('returns count: null when Content-Range is absent', async () => {
+    const { client } = clientWithContentRange(null)
+    const { count } = await client.from('orders').select('*')
+    expect(count).toBeNull()
+  })
+
+  it('returns count: null when the total is unknown ("*")', async () => {
+    const { client } = clientWithContentRange('0-9/*')
+    const { count } = await client.from('orders').select('*').limit(10)
+    expect(count).toBeNull()
+  })
+})
+
 describe('REST delete', () => {
   it('sends DELETE', async () => {
     let method = ''

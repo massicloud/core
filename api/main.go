@@ -105,6 +105,7 @@ func main() {
 
 	// Router
 	r := chi.NewRouter()
+	r.Use(middleware.RequestLogger)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(chimiddleware.Recoverer)
@@ -240,6 +241,7 @@ func main() {
 				})
 			})
 			r.Post("/{id}/query", h.RunQuery)
+			r.Post("/{id}/reload-schema", h.ReloadSchema)
 			r.Get("/{id}/export/schema", h.ExportSchema)
 			r.Get("/{id}/export/full", h.ExportFull)
 			r.Post("/{id}/initialize", h.InitializePostgres)
@@ -339,6 +341,16 @@ func main() {
 				// that there's no global default to fall back on.
 				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest/*", h.ProxyREST)
 				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest", h.ProxyREST)
+
+				// Admin SQL endpoint for migration tools (dbmate, Sqitch,
+				// Prisma, sqlc, plain psql scripts) — service key only.
+				// 60s timeout so a real migration doesn't die at 30s; rate
+				// limited since a single query can peg tenant Postgres.
+				r.With(
+					chimiddleware.Timeout(60*time.Second),
+					middleware.RateLimitPerProject(10),
+					middleware.MaxBytes(1<<20), // 1MB
+				).Post("/query", h.AdminQuery)
 			})
 		})
 

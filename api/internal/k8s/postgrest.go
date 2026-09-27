@@ -38,6 +38,7 @@ func (c *Client) CreatePostgRESTForInstance(ctx context.Context, req CreatePostg
 			"PGRST_JWT_SECRET":   req.JWTSecret,
 			"PGRST_DB_SCHEMAS":   "public",
 			"PGRST_DB_ANON_ROLE": "anon",
+			"PGRST_DB_USE_LEGACY_GUCS": "false",
 		},
 	}
 	_, err := c.cs.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})

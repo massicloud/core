@@ -126,6 +126,7 @@ func (h *Handler) CreateIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -150,6 +151,7 @@ func (h *Handler) DeleteIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 

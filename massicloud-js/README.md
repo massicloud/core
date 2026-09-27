@@ -146,6 +146,54 @@ await massi.from('posts').update({ title: 'Updated' }).eq('id', 'uuid')
 await massi.from('posts').delete().eq('id', 'uuid')
 ```
 
+## Upsert
+
+Insert a row, or update it in place if a row already violates the given
+unique constraint. Maps to PostgREST's upsert convention (`Prefer:
+resolution=merge-duplicates` + `?on_conflict=`).
+
+```ts
+await massi.from('users').upsert(
+  { email: 'a@b.com', name: 'Amina' },
+  { onConflict: 'email' },
+)
+
+// Array form works too
+await massi.from('users').upsert(
+  [{ email: 'a@b.com' }, { email: 'c@d.com' }],
+  { onConflict: 'email' },
+)
+
+// Leave the existing row alone on conflict instead of merging into it
+await massi.from('users').upsert(
+  { email: 'a@b.com', name: 'Amina' },
+  { onConflict: 'email', ignoreDuplicates: true },
+)
+```
+
+`onConflict` must name a column (or columns) with a unique or exclusion
+constraint — PostgREST needs that to know which existing row a given insert
+conflicts with. It defaults to the table's primary key if omitted.
+
+## Count, for pagination
+
+```ts
+const { data, count } = await massi.from('orders')
+  .select('*', { count: 'exact' })
+  .range(0, 19)
+// data has (up to) 20 rows; count has the total across all pages, e.g. 47
+
+// Get just the total, without fetching any rows:
+const { count: total } = await massi.from('orders')
+  .select('*', { count: 'exact', head: true })
+```
+
+`count: 'exact'` does a full `COUNT(*)` under the matched filters — accurate,
+but scans every matched row. `'planned'` and `'estimated'` use the query
+planner's row estimate instead: much cheaper on large tables, but
+approximate. `count` comes back `null` if it wasn't requested, or if
+PostgREST couldn't determine it.
+
 ## Object storage
 
 Storage is project-scoped (not tied to a stage/db). MinIO credentials never
@@ -191,7 +239,10 @@ const { data } = await massi.from<Post>('posts').select('*').single()
 
 ## Response shape
 
-Every query returns `{ data, error }`. Exactly one is non-null.
+Every query returns `{ data, error, count }`. Exactly one of `data`/`error`
+is non-null. `count` is only meaningful when requested via `.select(cols, {
+count })` (see [Count, for pagination](#count-for-pagination)) — otherwise
+it's `null`.
 
 ```ts
 const { data, error } = await massi.from('posts').select('*')

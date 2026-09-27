@@ -135,6 +135,7 @@ func (h *Handler) AddForeignKey(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -163,5 +164,6 @@ func (h *Handler) DeleteForeignKey(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }

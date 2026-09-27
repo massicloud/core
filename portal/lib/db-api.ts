@@ -42,6 +42,17 @@ export async function testConnection(
   }
 }
 
+// Tells PostgREST to reload its schema cache. Normally not needed — DDL
+// operations run through this app already trigger a reload — but useful as
+// a manual fallback (e.g. after DDL run directly against the database).
+export async function reloadSchemaCache(instanceId: string): Promise<void> {
+  try {
+    await api.post(`/postgres/${instanceId}/reload-schema`)
+  } catch (error) {
+    throw new Error(getErrorMessage(error))
+  }
+}
+
 // ============ TABLES ============
 
 export async function getTables(instanceId: string, schema = "public"): Promise<Table[]> {

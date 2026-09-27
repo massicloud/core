@@ -200,6 +200,7 @@ func (h *Handler) CreateTable(w http.ResponseWriter, r *http.Request) {
 		db.ExecContext(ctx, servicePolicy) //nolint:errcheck
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -225,6 +226,7 @@ func (h *Handler) DeleteTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -274,6 +276,7 @@ func (h *Handler) EnableRLS(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 

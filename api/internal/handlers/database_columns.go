@@ -128,6 +128,7 @@ func (h *Handler) AddColumn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -186,6 +187,7 @@ func (h *Handler) AlterColumn(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -212,6 +214,7 @@ func (h *Handler) DeleteColumn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.reloadPostgRESTSchema(ctx, db, id)
 	w.WriteHeader(http.StatusNoContent)
 }
 

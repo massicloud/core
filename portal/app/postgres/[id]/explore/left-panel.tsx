@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronDown, Database, Layers, Play, Plus, RotateCcw, Search, Table2 } from "lucide-react"
-import { getSchemas, getTableSecurity } from "@/lib/db-api"
-import { Table } from "@/types/db"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { getSchemas, getTableSecurity, reloadSchemaCache } from "@/lib/db-api"
+import { Table } from "@/types/db"
 import { useExplorer } from "@/lib/explorer-context"
 import { RLSBadge } from "@/components/explorer/rls-badge"
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/ui/breadcrumbs"
@@ -31,7 +32,21 @@ export function LeftPanel({
 }: LeftPanelProps) {
   const [search, setSearch] = useState("")
   const [schemaOpen, setSchemaOpen] = useState(false)
+  const [reloading, setReloading] = useState(false)
   const { tabs, openTable, openSqlForTable, currentSchema, setSchema } = useExplorer()
+
+  const handleReloadSchema = async () => {
+    if (reloading) return
+    setReloading(true)
+    try {
+      await reloadSchemaCache(instanceId)
+      toast.success("PostgREST schema cache reloaded")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to reload schema cache")
+    } finally {
+      setReloading(false)
+    }
+  }
 
   const { data: schemas = ["public"] } = useQuery({
     queryKey: ["db", instanceId, "schemas"],
@@ -94,9 +109,12 @@ export function LeftPanel({
             </span>
           </div>
           <button
-            className="p-1 rounded hover:text-white hover:bg-[#18181B] transition-colors shrink-0"
+            onClick={handleReloadSchema}
+            disabled={reloading}
+            title="Reload PostgREST schema cache"
+            className="p-1 rounded hover:text-white hover:bg-[#18181B] transition-colors shrink-0 disabled:opacity-50"
           >
-            <RotateCcw size={13} className="text-[#52525B]" />
+            <RotateCcw size={13} className={cn("text-[#52525B]", reloading && "animate-spin")} />
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@ export { createClient, MassiCloudClient } from './client'
 export { AuthClient } from './auth'
 export { RESTClient } from './rest'
 export { QueryBuilder } from './rest/builder'
+export type { SelectOptions, UpsertOptions } from './rest/builder'
 export { StorageClient, StorageBucketApi } from './storage'
 export { MassiCloudError, isMassiCloudError } from './errors'
 

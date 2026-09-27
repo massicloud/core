@@ -85,6 +85,11 @@ func (h *Handler) RunQuery(w http.ResponseWriter, r *http.Request) {
 		result = [][]interface{}{}
 	}
 
+	// The submitted SQL may have been DDL (CREATE TABLE, ALTER TABLE, etc.);
+	// there's no cheap way to tell from here, so always nudge PostgREST to
+	// reload its schema cache rather than parsing the statement.
+	h.reloadPostgRESTSchema(ctx, db, id)
+
 	h.writeJSON(w, http.StatusOK, QueryResponse{
 		Columns:       columns,
 		Rows:          result,

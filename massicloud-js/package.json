@@ -1,6 +1,6 @@
 {
   "name": "@massicloud/client",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Official JavaScript/TypeScript client for MassiCloud — Algerian sovereign cloud BaaS",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -12,7 +12,10 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -20,7 +23,13 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["massicloud", "baas", "postgres", "algeria", "supabase-alternative"],
+  "keywords": [
+    "massicloud",
+    "baas",
+    "postgres",
+    "algeria",
+    "supabase-alternative"
+  ],
   "author": "Amine Kessar",
   "license": "MIT",
   "repository": {
@@ -36,5 +45,8 @@
     "tsup": "^8.0.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "@massicloud/client": "^0.4.0"
   }
 }

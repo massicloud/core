@@ -8,11 +8,11 @@ domain:
 images:
   api:
     repository: ghcr.io/massicloud/massicloud-api
-    tag: "0.1.9"
+    tag: "0.3.0"
     pullPolicy: IfNotPresent
   portal:
     repository: ghcr.io/massicloud/massicloud-portal
-    tag: "0.1.6"
+    tag: "0.1.7"
     pullPolicy: IfNotPresent
   landing:
     repository: ghcr.io/massicloud/massicloud-landing

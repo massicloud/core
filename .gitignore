@@ -60,3 +60,4 @@ infra/*.sql
 # ── Helm — real secrets, never commit ────────────────────────────────────────
 deploy/helm/**/values-live.yaml
 deploy/helm/**/values-*-live.yaml
+.env.test
