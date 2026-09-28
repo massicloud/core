@@ -1,0 +1,51 @@
+{
+  "name": "@massicloud/cli",
+  "version": "0.1.0",
+  "description": "Migration runner for MassiCloud — Algerian sovereign cloud BaaS",
+  "type": "module",
+  "bin": {
+    "massicloud": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src/templates",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "massicloud",
+    "migrations",
+    "postgres",
+    "cli",
+    "baas"
+  ],
+  "author": "Amine Kessar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikaminou/massicloud-cli"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/prompts": "^2.4.9",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "prompts": "^2.4.2"
+  }
+}
