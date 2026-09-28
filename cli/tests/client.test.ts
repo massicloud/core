@@ -88,4 +88,59 @@ describe('MassiCloudApiClient.query', () => {
     const client = new MassiCloudApiClient(config, fetcher as unknown as typeof fetch)
     await expect(client.query('SELECT 1;')).rejects.toBeInstanceOf(ApiError)
   })
+
+  it('retries on 429 with exponential backoff and succeeds once the server recovers', async () => {
+    vi.useFakeTimers()
+    try {
+      const fetcher = vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse(429, {}))
+        .mockResolvedValueOnce(jsonResponse(429, {}))
+        .mockResolvedValueOnce(jsonResponse(200, { command: 'SELECT', rowCount: 1 }))
+      const client = new MassiCloudApiClient(config, fetcher as unknown as typeof fetch)
+
+      const resultPromise = client.query('SELECT 1;')
+
+      // First 429 -> waits 2s before retrying.
+      await vi.advanceTimersByTimeAsync(2000)
+      // Second 429 -> waits 4s before retrying.
+      await vi.advanceTimersByTimeAsync(4000)
+
+      const result = await resultPromise
+
+      expect(result).toEqual({ command: 'SELECT', rowCount: 1 })
+      expect(fetcher).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not retry on non-429 errors', async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse(500, { error: 'boom' }))
+    const client = new MassiCloudApiClient(config, fetcher as unknown as typeof fetch)
+
+    await expect(client.query('SELECT 1;')).rejects.toBeInstanceOf(ApiError)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('errors out after exhausting retries on repeated 429s', async () => {
+    vi.useFakeTimers()
+    try {
+      const fetcher = vi.fn().mockResolvedValue(jsonResponse(429, {}))
+      const client = new MassiCloudApiClient(config, fetcher as unknown as typeof fetch)
+
+      const resultPromise = client.query('SELECT 1;')
+      const assertion = expect(resultPromise).rejects.toBeInstanceOf(ApiError)
+
+      await vi.advanceTimersByTimeAsync(2000)
+      await vi.advanceTimersByTimeAsync(4000)
+      await vi.advanceTimersByTimeAsync(8000)
+
+      await assertion
+      // 1 initial attempt + 3 retries = 4 fetch calls total.
+      expect(fetcher).toHaveBeenCalledTimes(4)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

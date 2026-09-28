@@ -1,0 +1,8 @@
+{
+  "url": "https://api.massicloud.work/v1/qa-tests-bc51bff3",
+  "service_key": "${MASSICLOUD_SERVICE_KEY}",
+  "stages": ["development", "staging", "production"],
+  "databases": {
+    "main": { "migrations_dir": "./migrations" }
+  }
+}

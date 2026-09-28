@@ -2,7 +2,10 @@ import { loadConfig } from '../lib/config'
 import * as logger from '../lib/logger'
 import { assertNoDivergence, type ParsedMigration } from '../lib/migrations'
 import { buildSingleTargetReport } from '../lib/report'
+import { sleep } from '../lib/sleep'
 import { recordApplied } from '../lib/state'
+
+const INTER_MIGRATION_DELAY_MS = 500
 
 export interface UpOptions {
   configPath: string
@@ -35,7 +38,7 @@ export async function runUp(options: UpOptions): Promise<void> {
   let totalMs = 0
   let applied = 0
 
-  for (const migration of toApply) {
+  for (const [idx, migration] of toApply.entries()) {
     logger.info(`Applying ${migration.version}...`)
     const start = Date.now()
     try {
@@ -55,6 +58,10 @@ export async function runUp(options: UpOptions): Promise<void> {
     })
     totalMs += elapsed
     applied += 1
+
+    if (idx < toApply.length - 1) {
+      await sleep(INTER_MIGRATION_DELAY_MS)
+    }
   }
 
   logger.success(`Applied ${applied} migrations in ${totalMs}ms total`)
