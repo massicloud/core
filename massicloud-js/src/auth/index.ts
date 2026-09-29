@@ -6,12 +6,20 @@ import type {
   AuthChangeCallback,
   AuthEvent,
   MassiResponse,
+  PasswordResetConfirmResult,
+  PasswordResetResult,
   Session,
   SessionStorage,
   User,
 } from '../types'
 
 const DEFAULT_STORAGE_KEY = 'massicloud.auth.token'
+
+// Client-side pre-check so obviously-malformed addresses fail fast with
+// immediate feedback instead of a round trip — the server (net/mail-based,
+// see api/internal/handlers/project_auth.go) is still the source of truth
+// and re-validates independently.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface AuthOptions {
   url: string         // base URL including /db/{db}
@@ -77,6 +85,9 @@ export class AuthClient {
   // ─── Public API ───────────────────────────────────────────────────────────
 
   async signUp(credentials: { email: string; password: string }): Promise<MassiResponse<Session>> {
+    if (!EMAIL_REGEX.test(credentials.email)) {
+      return { data: null, error: new MassiCloudError('invalid email format') }
+    }
     return this.authRequest('signup', credentials)
   }
 
@@ -148,6 +159,32 @@ export class AuthClient {
     return this.currentSession?.access_token ?? null
   }
 
+  /**
+   * Starts a password reset for `email`. Doesn't touch the current session
+   * either way — this isn't a sign-in.
+   *
+   * TEMPORARY: until email delivery exists, a successful reset for a known
+   * email comes back with `reset_token` set directly in the response — see
+   * `PasswordResetResult`. For an unknown email the call still resolves
+   * with `error: null` and no `reset_token`, matching the server's
+   * anti-enumeration behavior; don't use `!!data?.reset_token` to decide
+   * whether the request "worked", only whether an email happened to match.
+   */
+  async requestPasswordReset(email: string): Promise<MassiResponse<PasswordResetResult>> {
+    if (!EMAIL_REGEX.test(email)) {
+      return { data: null, error: new MassiCloudError('invalid email format') }
+    }
+    return this.publicRequest<PasswordResetResult>('reset-password', { email })
+  }
+
+  /** Consumes a reset token (from `requestPasswordReset`) to set a new password. */
+  async confirmPasswordReset(input: {
+    token: string
+    new_password: string
+  }): Promise<MassiResponse<PasswordResetConfirmResult>> {
+    return this.publicRequest<PasswordResetConfirmResult>('reset-password/confirm', input)
+  }
+
   // ─── Internal ─────────────────────────────────────────────────────────────
 
   private async authRequest(
@@ -181,6 +218,40 @@ export class AuthClient {
       this.emit('SIGNED_IN', session)
 
       return { data: session, error: null }
+    } catch (e) {
+      return { data: null, error: new MassiCloudError((e as Error).message) }
+    }
+  }
+
+  /**
+   * Same fetch/error-shaping pattern as authRequest, for endpoints that
+   * don't return a Session and so shouldn't touch currentSession — password
+   * reset request/confirm today.
+   */
+  private async publicRequest<T>(path: string, body: unknown): Promise<MassiResponse<T>> {
+    try {
+      const res = await this.fetcher(`${this.url}/auth/${path}`, {
+        method: 'POST',
+        headers: {
+          'X-MassiCloud-Key': this.key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      const json = await res.json().catch(() => ({})) as Record<string, unknown>
+
+      if (!res.ok) {
+        return {
+          data: null,
+          error: new MassiCloudError(
+            String(json.error ?? 'request failed'),
+            { status: res.status },
+          ),
+        }
+      }
+
+      return { data: json as T, error: null }
     } catch (e) {
       return { data: null, error: new MassiCloudError((e as Error).message) }
     }

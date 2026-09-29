@@ -98,3 +98,19 @@ export interface MassiError {
   status?: number
   details?: unknown
 }
+
+export interface PasswordResetResult {
+  /**
+   * TEMPORARY: the raw reset token, returned directly in the response
+   * until email delivery is wired up (separate follow-up). Present only
+   * when the email matched a registered user — absent (not empty) for an
+   * unknown email, since the endpoint responds identically either way to
+   * avoid leaking which emails are registered.
+   */
+  reset_token?: string
+  message: string
+}
+
+export interface PasswordResetConfirmResult {
+  message: string
+}

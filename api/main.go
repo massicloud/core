@@ -330,6 +330,8 @@ func main() {
 				r.Post("/auth/signup", h.SignUpEndUser)
 				r.Post("/auth/login", h.SignInEndUser)
 				r.Post("/auth/refresh", h.RefreshEndUser)
+				r.Post("/auth/reset-password", h.RequestPasswordReset)
+				r.Post("/auth/reset-password/confirm", h.ConfirmPasswordReset)
 
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequireEndUserToken)

@@ -32,3 +32,20 @@ type AuthResponse struct {
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
+
+type PasswordResetRequest struct {
+	Email string `json:"email"`
+}
+
+type PasswordResetResponse struct {
+	// TEMPORARY: populated directly until email delivery exists. Omitted
+	// entirely when the email doesn't match a registered user.
+	ResetToken string `json:"reset_token,omitempty"`
+	Note       string `json:"note,omitempty"`
+	Message    string `json:"message"`
+}
+
+type PasswordResetConfirmRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
+}
