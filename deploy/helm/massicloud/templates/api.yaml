@@ -80,6 +80,8 @@ spec:
             name: massicloud-api-config
         - secretRef:
             name: minio-creds
+        - secretRef:
+            name: platform-redis-creds
         env:
         - name: DOMAIN_SUFFIX
           value: {{ .Values.domain.base | quote }}

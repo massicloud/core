@@ -1,0 +1,83 @@
+# Platform Redis — backs the API's per-API-key rate limiter
+# (internal/ratelimit). Distinct from the per-tenant Redis instances the
+# API provisions on request (internal/k8s, backingImages.redis): this one
+# is shared platform infra, always-on, one per cluster — same relationship
+# platform-postgres.yaml has to tenant Postgres instances.
+#
+# Plain StatefulSet + Service + PVC, matching every other backing service
+# in this chart (platform-postgres.yaml, minio.yaml) rather than pulling in
+# the Bitnami redis chart as a dependency — this chart has no subchart
+# dependencies today, and a single-instance cache doesn't need the
+# replication/sentinel machinery that chart is built around.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-redis-creds
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  REDIS_PASSWORD: {{ .Values.redis.password | quote }}
+  REDIS_URL: "redis://:{{ .Values.redis.password }}@platform-redis:6379/0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-redis
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: platform-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: platform-redis
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceName: platform-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-redis
+  template:
+    metadata:
+      labels:
+        app: platform-redis
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.backingImages.redis | quote }}
+        args:
+        - "--requirepass"
+        - "$(REDIS_PASSWORD)"
+        - "--appendonly"
+        - "yes"
+        ports:
+        - containerPort: 6379
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: platform-redis-creds
+              key: REDIS_PASSWORD
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        resources:
+{{ toYaml .Values.redis.resources | indent 10 }}
+        readinessProbe:
+          exec:
+            command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "--no-auth-warning", "ping"]
+          initialDelaySeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      storageClassName: {{ .Values.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.redis.storage }}

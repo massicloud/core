@@ -8,7 +8,7 @@ domain:
 images:
   api:
     repository: ghcr.io/massicloud/massicloud-api
-    tag: "0.3.2"
+    tag: "0.3.4"
     pullPolicy: IfNotPresent
   portal:
     repository: ghcr.io/massicloud/massicloud-portal
@@ -54,6 +54,20 @@ minio:
       cpu: 250m
     limits:
       memory: 1Gi
+
+# Platform Redis — backs the API's rate limiter (internal/ratelimit).
+# Standalone, no replication: it's a cache the API already falls back to
+# in-memory-per-pod without, so losing it costs shared-across-replica rate
+# limits, not correctness or data.
+redis:
+  password: "wo2mQhfpndW/D73fHqkX04FABHbcAGnkJWfipMvc5FM="
+  storage: 1Gi
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
 
 # API config
 api:

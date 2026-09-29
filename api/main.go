@@ -15,6 +15,8 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
+
 	"github.com/mikaminou/massicloud/api/internal/auth"
 	"github.com/mikaminou/massicloud/api/internal/backup"
 	"github.com/mikaminou/massicloud/api/internal/config"
@@ -23,6 +25,7 @@ import (
 	"github.com/mikaminou/massicloud/api/internal/k8s"
 	"github.com/mikaminou/massicloud/api/internal/middleware"
 	"github.com/mikaminou/massicloud/api/internal/proxy"
+	"github.com/mikaminou/massicloud/api/internal/ratelimit"
 	"github.com/mikaminou/massicloud/api/internal/storage"
 	"github.com/mikaminou/massicloud/api/internal/store"
 )
@@ -102,6 +105,23 @@ func main() {
 	schedulerCtx, schedulerCancel := context.WithCancel(context.Background())
 	go scheduler.Run(schedulerCtx)
 	slog.Info("backup scheduler started")
+
+	// Rate limiter — Redis-backed (shared across replicas) with an
+	// in-memory fallback (see internal/ratelimit). REDIS_URL is optional;
+	// unset or unparseable both degrade to in-memory-only rather than
+	// blocking startup, since losing cross-replica sharing is much less
+	// severe than the API refusing to start over a rate-limiter dependency.
+	var redisClient *redis.Client
+	if cfg.RedisURL != "" {
+		opt, err := redis.ParseURL(cfg.RedisURL)
+		if err != nil {
+			slog.Error("invalid REDIS_URL, rate limiter will run in-memory-only", "error", err)
+		} else {
+			redisClient = redis.NewClient(opt)
+		}
+	}
+	rateLimiter := ratelimit.NewHybrid(redisClient, logger)
+	slog.Info("rate limiter initialized", "redis_configured", redisClient != nil)
 
 	// Router
 	r := chi.NewRouter()
@@ -327,30 +347,59 @@ func main() {
 			r.Route("/db/{db}", func(r chi.Router) {
 				r.Use(middleware.RequireStageInstance(db))
 
-				r.Post("/auth/signup", h.SignUpEndUser)
-				r.Post("/auth/login", h.SignInEndUser)
-				r.Post("/auth/refresh", h.RefreshEndUser)
-				r.Post("/auth/reset-password", h.RequestPasswordReset)
-				r.Post("/auth/reset-password/confirm", h.ConfirmPasswordReset)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequireCategory(rateLimiter, ratelimit.CategoryAuth))
+					r.Post("/auth/signup", h.SignUpEndUser)
+					r.Post("/auth/login", h.SignInEndUser)
+					r.Post("/auth/refresh", h.RefreshEndUser)
+					r.Post("/auth/reset-password", h.RequestPasswordReset)
+					r.Post("/auth/reset-password/confirm", h.ConfirmPasswordReset)
+				})
 
 				r.Group(func(r chi.Router) {
 					r.Use(middleware.RequireEndUserToken)
+					r.Use(middleware.RequireCategory(rateLimiter, ratelimit.CategoryReads))
 					r.Get("/auth/user", h.GetEndUser)
 				})
 
 				// ProxyREST doesn't set its own context timeout (it streams
 				// through to PostgREST), so it needs an explicit one now
-				// that there's no global default to fall back on.
-				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest/*", h.ProxyREST)
-				r.With(chimiddleware.Timeout(30*time.Second)).HandleFunc("/rest", h.ProxyREST)
+				// that there's no global default to fall back on. Split by
+				// verb (rather than the single all-methods HandleFunc this
+				// used to be) purely so reads and writes can carry
+				// different rate-limit categories — ProxyREST itself is
+				// still one method-agnostic passthrough handler either way.
+				r.Group(func(r chi.Router) {
+					r.Use(chimiddleware.Timeout(30 * time.Second))
+					r.Use(middleware.RequireCategory(rateLimiter, ratelimit.CategoryReads))
+					r.Get("/rest/*", h.ProxyREST)
+					r.Get("/rest", h.ProxyREST)
+					// chi treats HEAD as distinct from GET — the SDK's
+					// count-only queries (.select(..., { head: true })) send
+					// a real HTTP HEAD, which fell through to a 405 once the
+					// old method-agnostic HandleFunc was split by verb.
+					r.Head("/rest/*", h.ProxyREST)
+					r.Head("/rest", h.ProxyREST)
+				})
+				r.Group(func(r chi.Router) {
+					r.Use(chimiddleware.Timeout(30 * time.Second))
+					r.Use(middleware.RequireCategory(rateLimiter, ratelimit.CategoryWrites))
+					r.Post("/rest/*", h.ProxyREST)
+					r.Post("/rest", h.ProxyREST)
+					r.Patch("/rest/*", h.ProxyREST)
+					r.Patch("/rest", h.ProxyREST)
+					r.Delete("/rest/*", h.ProxyREST)
+					r.Delete("/rest", h.ProxyREST)
+				})
 
 				// Admin SQL endpoint for migration tools (dbmate, Sqitch,
 				// Prisma, sqlc, plain psql scripts) — service key only.
-				// 60s timeout so a real migration doesn't die at 30s; rate
-				// limited since a single query can peg tenant Postgres.
+				// 60s timeout so a real migration doesn't die at 30s. Used
+				// to have its own ad-hoc 10 req/min-per-project limiter;
+				// that's superseded by the platform-wide writes category.
 				r.With(
 					chimiddleware.Timeout(60*time.Second),
-					middleware.RateLimitPerProject(10),
+					middleware.RequireCategory(rateLimiter, ratelimit.CategoryWrites),
 					middleware.MaxBytes(1<<20), // 1MB
 				).Post("/query", h.AdminQuery)
 			})
@@ -362,13 +411,20 @@ func main() {
 		r.Route("/storage/buckets/{name}", func(r chi.Router) {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.OptionalEndUserToken)
-				r.Get("/objects", h.EndUserListObjects)
-				r.Get("/objects/*", h.EndUserDownloadObject)
-				r.Post("/presign", h.EndUserPresignObject)
+				r.With(middleware.RequireCategory(rateLimiter, ratelimit.CategoryReads)).
+					Get("/objects", h.EndUserListObjects)
+				r.With(middleware.RequireCategory(rateLimiter, ratelimit.CategoryReads)).
+					Get("/objects/*", h.EndUserDownloadObject)
+				// Presigning doesn't write anything itself, but it's listed
+				// under the "writes" category in this task's spec — kept
+				// consistent with that rather than reclassifying it.
+				r.With(middleware.RequireCategory(rateLimiter, ratelimit.CategoryWrites)).
+					Post("/presign", h.EndUserPresignObject)
 			})
 
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireEndUserToken)
+				r.Use(middleware.RequireCategory(rateLimiter, ratelimit.CategoryWrites))
 				r.Post("/objects", h.EndUserUploadObject)
 				r.Delete("/objects/*", h.EndUserDeleteObject)
 			})

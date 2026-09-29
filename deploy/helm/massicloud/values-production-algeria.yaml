@@ -20,6 +20,9 @@ platformPostgres:
 minio:
   rootPassword: "REPLACE_WITH_STRONG_PASSWORD"
 
+redis:
+  password: "REPLACE_WITH_STRONG_PASSWORD"
+
 api:
   jwtSecret: "REPLACE_WITH_STRONG_JWT_SECRET_32_CHARS"
   registerSecret: "REPLACE_WITH_STRONG_REGISTER_SECRET"

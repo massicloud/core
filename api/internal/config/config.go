@@ -22,6 +22,12 @@ type Config struct {
 	MinioPassword  string
 	MinioUseSSL    bool
 
+	// RedisURL is the platform rate limiter's primary store
+	// (redis://:{password}@{host}:{port}/{db}). Optional — when empty, the
+	// rate limiter runs in-memory-only from the start, with no attempt to
+	// reach Redis. See internal/ratelimit.
+	RedisURL string
+
 	// Backing-service images used when provisioning tenant workloads on k8s.
 	PostgresImage  string
 	RedisImage     string
@@ -92,6 +98,8 @@ func Load() (*Config, error) {
 
 	minioUseSSL := os.Getenv("MINIO_USE_SSL") == "true"
 
+	redisURL := os.Getenv("REDIS_URL")
+
 	postgresImage := os.Getenv("POSTGRES_IMAGE")
 	if postgresImage == "" {
 		postgresImage = "postgres:16-alpine"
@@ -128,6 +136,7 @@ func Load() (*Config, error) {
 		MinioUser:      minioUser,
 		MinioPassword:  minioPassword,
 		MinioUseSSL:    minioUseSSL,
+		RedisURL:       redisURL,
 		PostgresImage:  postgresImage,
 		RedisImage:     redisImage,
 		PostgRESTImage: postgrestImage,

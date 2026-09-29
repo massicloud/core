@@ -395,20 +395,12 @@ describe("Auth: password reset", () => {
     // Blocked on real session/token revocation — see BUGS.md.
   })
 
-  it("4th reset-password request for the same email in quick succession is rate-limited", async () => {
-    const email = uniqueEmail("ratelimit")
-    const massi = makeAnonClient()
-    await massi.auth.signUp({ email, password: PASSWORD })
-
-    const results = []
-    for (let i = 0; i < 4; i++) {
-      results.push(await massi.auth.requestPasswordReset(email))
-    }
-
-    expect(results.slice(0, 3).every((r) => r.error === null)).toBe(true)
-    expect(results[3].error).not.toBeNull()
-    expect(results[3].error?.status).toBe(429)
-  })
+  // Superseded (see BUGS.md and sdk/ratelimit.test.ts): password reset's
+  // own per-email 3/hour limiter has been removed in favor of the
+  // platform-wide "auth" category (10 req/sec per API key, shared with
+  // every other auth endpoint). That cap — and proof the old 3/hour one is
+  // gone — is now covered by "Rate limits: auth" in ratelimit.test.ts, not
+  // here.
 })
 
 // ----- Cleanup -----------------------------------------------------------

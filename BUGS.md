@@ -41,6 +41,39 @@ detail to pick up and fix later. This file covers the platform (`api/`,
 
 ## Fixed
 
+### No platform-wide rate limiting on end-user endpoints — added 2026-09-29
+
+- **What shipped:** every end-user (project API key gated) endpoint under
+  `/v1/{slug}/...` is now rate-limited per API key via a token bucket in
+  three categories — reads 300 req/sec, writes 100 req/sec, auth 10
+  req/sec (same limits for anon and service keys). New package
+  `api/internal/ratelimit`: `bucket.go` (pure token-bucket math, unit
+  tested), `redis.go` (Redis-backed, atomic via an embedded Lua script),
+  `memory.go` (`sync.Map` fallback), `limiter.go` (`Hybrid`: tries Redis,
+  falls through to in-memory on error or a 50ms timeout, logs a throttled
+  WARN). Middleware: `middleware.RequireCategory` in
+  `api/internal/middleware/ratelimit.go`, wired onto every reads/writes/auth
+  route in `api/main.go`. A 429 carries `Retry-After`,
+  `X-RateLimit-Limit`, `X-RateLimit-Category` headers and a structured
+  body (`{"error": "rate_limit_exceeded", "category", "retry_after_seconds"}`).
+- **Deploy:** needs a new `platform-redis` service
+  (`deploy/helm/massicloud/templates/platform-redis.yaml` + `redis:` block
+  in values files) — see that chart's `CHANGELOG.md` for the exact command.
+  `REDIS_URL` is optional; without it (or if Redis is unreachable at
+  runtime) the API runs the in-memory fallback per pod rather than
+  refusing to start or letting requests through unchecked.
+- **Superseded by this:** the ad-hoc `/query` limiter
+  (`middleware.RateLimitPerProject`, 10 req/min per project) and password
+  reset's own `resetRequestLimiter` (3/hour per email) — both removed; see
+  the strikethrough note on the password-reset entry below.
+- Regression tests: `tests/sdk/ratelimit.test.ts` (reads/writes/auth
+  category limits, cross-category and cross-key independence, the 429
+  response shape, and confirming the old 3/hour reset-password cap is
+  gone) — not yet run against a live deployment; requires the API
+  redeploy this change depends on.
+- Unit tests: `api/internal/ratelimit/bucket_test.go` (refill math,
+  take/deny, retry-after) — pure, no I/O, run with `go test`.
+
 ### Duplicate end-user signup race: SELECT-then-INSERT wasn't atomic — 500 instead of 409 — fixed 2026-09-28
 
 - **Symptom:** two concurrent `auth.signUp()` calls for the same email
@@ -99,11 +132,13 @@ detail to pick up and fix later. This file covers the platform (`api/`,
     `auth.users.encrypted_password` and best-effort clears
     `auth.sessions`). Both in `api/internal/handlers/project_auth.go`,
     routed in `api/main.go`.
-  - Rate limiting: `resetRequestLimiter` (same file) caps
-    `reset-password` requests at 3 per hour per `(project, email)`, counted
-    whether or not the email is registered — an in-memory map with TTL
-    pruning, same tradeoff as `middleware.RateLimitPerProject` (per-process,
-    resets on pod restart; a shared limiter is a separate task).
+  - ~~Rate limiting: `resetRequestLimiter` (same file) caps `reset-password`
+    requests at 3 per hour per `(project, email)`~~ — **superseded
+    2026-09-29** by the platform-wide rate limiter (`internal/ratelimit`,
+    see its own Fixed entry below): `resetRequestLimiter` was removed, and
+    `reset-password`/`reset-password/confirm` now share the generic 10
+    req/sec "auth" category per API key with every other auth endpoint,
+    same as everything else under `/v1/{slug}`.
   - Anti-enumeration: the endpoint returns the identical 200 response shape
     for a registered and an unregistered email, differing only in whether
     `reset_token` is present.

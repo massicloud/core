@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -312,15 +311,11 @@ func (h *Handler) RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
-	// Keyed per-project so the same email across two different tenants
-	// doesn't share a budget; counted regardless of whether the email turns
-	// out to belong to a user, so the limiter itself can't be used to probe
-	// which emails are registered.
-	if !passwordResetLimiter.allow(project.ID+":"+req.Email, passwordResetMaxAttempts, passwordResetWindow) {
-		h.writeError(w, http.StatusTooManyRequests, "too many password reset requests, try again later")
-		return
-	}
-
+	// Rate limiting for this endpoint is now handled platform-wide by
+	// middleware.RequireCategory(ratelimit.CategoryAuth) on the route (see
+	// main.go) — 10 req/sec per API key, shared with every other auth
+	// endpoint. The old per-email 3/hour limiter that used to live here has
+	// been removed; see BUGS.md.
 	pool, err := h.proxy.GetPool(ctx, instance.ID)
 	if err != nil {
 		h.writeError(w, http.StatusInternalServerError, "database connection failed")
@@ -492,51 +487,4 @@ func isValidPassword(password string) bool {
 func isPgUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
-}
-
-const (
-	passwordResetMaxAttempts = 3
-	passwordResetWindow      = time.Hour
-)
-
-// resetRequestLimiter throttles password-reset requests per key (typically
-// "{projectID}:{email}") so the endpoint can't be used to spam a user with
-// reset tokens or hammered as a user-enumeration oracle.
-//
-// In-memory and per-process — same tradeoff as
-// middleware.RateLimitPerProject: fine for a single API replica, resets on
-// pod restart, and isn't shared across replicas if the API ever scales out
-// horizontally. A shared/production-grade limiter is a separate task.
-type resetRequestLimiter struct {
-	mu       sync.Mutex
-	attempts map[string][]time.Time
-}
-
-var passwordResetLimiter = &resetRequestLimiter{
-	attempts: make(map[string][]time.Time),
-}
-
-// allow reports whether another attempt for key is permitted right now,
-// recording this attempt if so. It also prunes attempts older than window
-// on every call, so the map doesn't grow unbounded over a long-running
-// process.
-func (l *resetRequestLimiter) allow(key string, max int, window time.Duration) bool {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	cutoff := time.Now().Add(-window)
-	kept := l.attempts[key][:0]
-	for _, t := range l.attempts[key] {
-		if t.After(cutoff) {
-			kept = append(kept, t)
-		}
-	}
-
-	if len(kept) >= max {
-		l.attempts[key] = kept
-		return false
-	}
-
-	l.attempts[key] = append(kept, time.Now())
-	return true
 }

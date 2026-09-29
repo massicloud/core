@@ -1,62 +1,56 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
-	"sync"
+	"strconv"
 
-	"golang.org/x/time/rate"
-
-	"github.com/mikaminou/massicloud/api/internal/models"
+	"github.com/mikaminou/massicloud/api/internal/ratelimit"
 )
 
-// perProjectLimiter holds one token-bucket limiter per project ID.
+// RequireCategory rate-limits requests through the given hybrid limiter,
+// per (cat, API key). It reads the raw key straight from the request
+// header rather than from CtxAPIKey (set by RequireProjectKey) because
+// CtxAPIKey only ever holds the key's prefix/hash — never the raw value —
+// and the bucket key is specified to be the raw key string.
 //
-// This is in-memory and per-process: fine for a single API replica, but a
-// limit resets on pod restart and isn't shared across replicas if the API
-// is ever scaled out horizontally. Move to a shared store (e.g. Redis) if
-// that starts to matter.
-type perProjectLimiter struct {
-	mu       sync.Mutex
-	limiters map[string]*rate.Limiter
-	r        rate.Limit
-	burst    int
-}
-
-func (l *perProjectLimiter) get(projectID string) *rate.Limiter {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	lim, ok := l.limiters[projectID]
-	if !ok {
-		lim = rate.NewLimiter(l.r, l.burst)
-		l.limiters[projectID] = lim
-	}
-	return lim
-}
-
-// RateLimitPerProject rejects requests over ratePerMinute per project once
-// the initial burst is used up. Must run after RequireProjectKey, which
-// sets CtxProject.
-func RateLimitPerProject(ratePerMinute int) func(http.Handler) http.Handler {
-	limiter := &perProjectLimiter{
-		limiters: make(map[string]*rate.Limiter),
-		r:        rate.Limit(float64(ratePerMinute) / 60),
-		burst:    ratePerMinute,
-	}
-
+// A request with no key header is let through untouched: whether the key
+// is missing or invalid is RequireProjectKey's job to reject, not this
+// middleware's — in every route this is wired onto, RequireProjectKey has
+// already run and rejected an unkeyed/invalid request before this executes,
+// so in practice the header is always present here.
+func RequireCategory(limiter ratelimit.Limiter, cat ratelimit.Category) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			project, ok := r.Context().Value(CtxProject).(models.Project)
-			if !ok {
-				writeMiddlewareJSON(w, http.StatusInternalServerError, map[string]string{
-					"error": "project context missing",
-				})
+			apiKey := r.Header.Get("X-MassiCloud-Key")
+			if apiKey == "" {
+				apiKey = r.Header.Get("apikey")
+			}
+			if apiKey == "" {
+				next.ServeHTTP(w, r)
 				return
 			}
 
-			if !limiter.get(project.ID).Allow() {
-				writeMiddlewareJSON(w, http.StatusTooManyRequests, map[string]string{
-					"error": "rate limit exceeded, try again shortly",
+			result, err := limiter.Allow(r.Context(), cat, apiKey)
+			if err != nil {
+				// Both the Redis and in-memory backends failed — the latter
+				// never errors in practice, so this is effectively
+				// unreachable. Fail open rather than take the API down over
+				// a rate-limiter bug.
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if !result.Allowed {
+				w.Header().Set("Retry-After", strconv.Itoa(result.RetryAfter))
+				w.Header().Set("X-RateLimit-Limit", strconv.FormatFloat(result.Limit, 'f', 0, 64))
+				w.Header().Set("X-RateLimit-Category", string(cat))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusTooManyRequests)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error":               "rate_limit_exceeded",
+					"category":            string(cat),
+					"retry_after_seconds": result.RetryAfter,
 				})
 				return
 			}
