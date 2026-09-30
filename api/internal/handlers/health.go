@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/mikaminou/massicloud/api/internal/email"
 	"log/slog"
 	"net/http"
 
@@ -27,6 +28,8 @@ type Handler struct {
 	backupService *backup.Service
 	proxy         *proxy.PostgresProxy
 	mongo         *mongoclient.Manager
+	resetStore    platformResetStore
+	emailSender   email.Sender
 }
 
 func New(
@@ -39,6 +42,7 @@ func New(
 	initSvc *initschemas.Service,
 	backupSvc *backup.Service,
 	dbProxy *proxy.PostgresProxy,
+	emailSender email.Sender,
 ) *Handler {
 	return &Handler{
 		k8s:           k8sClient,
@@ -51,6 +55,8 @@ func New(
 		backupService: backupSvc,
 		proxy:         dbProxy,
 		mongo:         mongoclient.NewManager(),
+		resetStore:    store,
+		emailSender:   emailSender,
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/mikaminou/massicloud/api/internal/metrics"
 	"github.com/mikaminou/massicloud/api/internal/models"
 )
 
@@ -24,6 +25,7 @@ func New(ctx context.Context, databaseURL string, logger *slog.Logger) (*Store, 
 		return nil, fmt.Errorf("parse database url: %w", err)
 	}
 	cfg.MaxConns = 20
+	cfg.ConnConfig.Tracer = metrics.DBTracer{}
 	cfg.MinConns = 2
 
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
@@ -629,4 +631,42 @@ func (s *Store) IncrBucketStatsByName(ctx context.Context, name string, sizeDelt
 func (s *Store) LogInstancesWithInvalidNames(_ context.Context) error {
 	slog.Info("store: instance name validation skipped (stage model active)")
 	return nil
+}
+
+// =============================================================================
+// METRICS SOURCE (metrics.Source)
+// =============================================================================
+
+func (s *Store) ListProjectRefs(ctx context.Context) ([]metrics.ProjectRef, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, slug FROM projects`)
+	if err != nil {
+		return nil, fmt.Errorf("store: list project refs: %w", err)
+	}
+	defer rows.Close()
+	var out []metrics.ProjectRef
+	for rows.Next() {
+		var p metrics.ProjectRef
+		if err := rows.Scan(&p.ID, &p.Slug); err != nil {
+			return nil, fmt.Errorf("store: scan project ref: %w", err)
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) ListBucketRefs(ctx context.Context) ([]metrics.BucketRef, error) {
+	rows, err := s.pool.Query(ctx, `SELECT b.name, p.slug FROM buckets b JOIN projects p ON p.id = b.project_id`)
+	if err != nil {
+		return nil, fmt.Errorf("store: list bucket refs: %w", err)
+	}
+	defer rows.Close()
+	var out []metrics.BucketRef
+	for rows.Next() {
+		var b metrics.BucketRef
+		if err := rows.Scan(&b.Name, &b.ProjectSlug); err != nil {
+			return nil, fmt.Errorf("store: scan bucket ref: %w", err)
+		}
+		out = append(out, b)
+	}
+	return out, rows.Err()
 }

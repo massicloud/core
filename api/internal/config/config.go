@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	APIPort        string
+	MetricsPort    string // Prometheus /metrics, separate from APIPort so it stays cluster-internal
 	APIBaseURL     string // e.g. http://localhost:8080 — used to build download token URLs
 	PublicHost     string
 	DomainSuffix   string // ingress DNS suffix for tenant workloads, e.g. "massicloud.work"
@@ -28,6 +29,13 @@ type Config struct {
 	// reach Redis. See internal/ratelimit.
 	RedisURL string
 
+	// Transactional email (platform password reset). ResendAPIKey is
+	// optional: when empty the API starts in an "email disabled" state and
+	// every send attempt logs an error.
+	ResendAPIKey string
+	EmailFrom    string
+	PortalURL    string // base URL of the portal, used to build reset links
+
 	// Backing-service images used when provisioning tenant workloads on k8s.
 	PostgresImage  string
 	RedisImage     string
@@ -39,6 +47,11 @@ func Load() (*Config, error) {
 	port := os.Getenv("API_PORT")
 	if port == "" {
 		port = "8080"
+	}
+
+	metricsPort := os.Getenv("METRICS_PORT")
+	if metricsPort == "" {
+		metricsPort = "9090"
 	}
 
 	publicHost := os.Getenv("PUBLIC_HOST")
@@ -100,6 +113,15 @@ func Load() (*Config, error) {
 
 	redisURL := os.Getenv("REDIS_URL")
 
+	emailFrom := os.Getenv("EMAIL_FROM")
+	if emailFrom == "" {
+		emailFrom = "MassiCloud <noreply@massidigits.com>"
+	}
+	portalURL := os.Getenv("PORTAL_URL")
+	if portalURL == "" {
+		portalURL = "https://app.massicloud.work"
+	}
+
 	postgresImage := os.Getenv("POSTGRES_IMAGE")
 	if postgresImage == "" {
 		postgresImage = "postgres:16-alpine"
@@ -125,6 +147,7 @@ func Load() (*Config, error) {
 	return &Config{
 		APIPort:        port,
 		APIBaseURL:     apiBaseURL,
+		MetricsPort:    metricsPort,
 		PublicHost:     publicHost,
 		DomainSuffix:   domainSuffix,
 		StorageClass:   storageClass,
@@ -137,6 +160,9 @@ func Load() (*Config, error) {
 		MinioPassword:  minioPassword,
 		MinioUseSSL:    minioUseSSL,
 		RedisURL:       redisURL,
+		ResendAPIKey:   os.Getenv("RESEND_API_KEY"),
+		EmailFrom:      emailFrom,
+		PortalURL:      portalURL,
 		PostgresImage:  postgresImage,
 		RedisImage:     redisImage,
 		PostgRESTImage: postgrestImage,

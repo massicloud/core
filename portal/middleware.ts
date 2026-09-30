@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server"
 const TOKEN_KEY = "massicloud_token"
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/register"]
+const publicRoutes = ["/login", "/register", "/forgot-password", "/reset"]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -12,8 +12,9 @@ export function middleware(request: NextRequest) {
 
   // Allow public routes
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    // If already logged in, redirect to dashboard
-    if (token) {
+    // If already logged in, redirect to dashboard — except /reset, which is
+    // reached from an emailed link and must work even with a stale session.
+    if (token && !pathname.startsWith("/reset")) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
     }
     return NextResponse.next()

@@ -92,4 +92,4 @@ echo "Done. Deploy with:"
 echo "helm upgrade --install massicloud ./deploy/helm/massicloud \
         --namespace massicloud-system \
         -f deploy/helm/massicloud/values.yaml \
-        -f deploy/helm/massicloud/values-live.yaml"
+        -f deploy/helm/massicloud/values-qa-secrets.yaml"

@@ -127,6 +127,14 @@ export async function register(email: string, password: string, fullName: string
   return response.data;
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api.post("/auth/reset-password", { email });
+}
+
+export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  await api.post("/auth/reset-password/confirm", { token, new_password: newPassword });
+}
+
 export async function me(): Promise<User> {
   const response = await api.get<User>("/auth/me");
   return response.data;

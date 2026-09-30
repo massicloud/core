@@ -16,6 +16,22 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Platform (portal) user password reset. Separate from the end-user reset
+-- flow. user_id is TEXT, not UUID, to match users.id. token_hash is the
+-- SHA-256 hex of the raw token; the raw token is never stored.
+CREATE TABLE IF NOT EXISTS platform_password_reset_tokens (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    used_at     TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_platform_password_reset_tokens_hash
+    ON platform_password_reset_tokens(token_hash)
+    WHERE used_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS projects (
     id                 TEXT PRIMARY KEY,
     name               TEXT NOT NULL,

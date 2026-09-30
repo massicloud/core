@@ -1,0 +1,33 @@
+# Live Algeria overrides. Not deployed anywhere yet — placeholder until an
+# Algerian hosting provider is selected. Do NOT use for daily QA work; QA
+# runs from values.yaml (plus the gitignored values-qa-secrets.yaml).
+#
+# Future Algeria deploy (documented, not yet used):
+#
+#   helm upgrade --install massicloud ./deploy/helm/massicloud \
+#     -n massicloud-system \
+#     -f ./deploy/helm/massicloud/values.yaml \
+#     -f ./deploy/helm/massicloud/values-algeria.yaml \
+#     -f ./deploy/helm/massicloud/values-algeria-secrets.yaml   # gitignored
+#
+# This file is committed and holds placeholders only. Real secrets go in
+# values-algeria-secrets.yaml (gitignored). Never fill secrets in here.
+
+# TODO: apex domain once the Algerian cluster/provider is picked
+# domain:
+#   base: <TBD>
+
+# TODO: image tags — match whatever QA has validated (values.yaml `images`)
+# images:
+#   api:    { tag: "<TBD>" }
+#   portal: { tag: "<TBD>" }
+
+# TODO: email — portalURL must use the Algerian domain above
+# email:
+#   portalURL: "https://app.<TBD>"
+
+# TODO: provider-specific overrides (storageClass, ingress.className,
+# ingress.clusterIssuer, resource sizing) once the provider is known.
+
+# TODO (secrets file, not here): platformPostgres.password,
+# minio.rootPassword, redis.password, api.jwtSecret, api.registerSecret

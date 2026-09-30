@@ -1,0 +1,27 @@
+# grafana/promtail chart: DaemonSet log shipper -> Loki. Ships every pod's
+# logs in every namespace with these labels:
+#   namespace, pod, app (pod label `app`, falling back to app.kubernetes.io/name),
+#   project_id (from tenant-{project-id} namespaces).
+# project_slug can't be derived from the namespace name (it embeds the project
+# ID, not the slug). Map id -> slug in Grafana with the API's
+# massicloud_project_info metric, or query Loki by project_id.
+config:
+  clients:
+    - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+  snippets:
+    pipelineStages:
+      - cri: {}
+    # The chart's default relabelling already sets namespace, pod, container
+    # and app (from app.kubernetes.io/name). These add: plain `app` label
+    # precedence (this repo's pods use `app:`), and project_id.
+    extraRelabelConfigs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: (.+)
+        target_label: app
+      - source_labels: [__meta_kubernetes_namespace]
+        regex: tenant-(.+)
+        target_label: project_id
+        replacement: $1
+resources:
+  requests: { cpu: 25m, memory: 64Mi }
+  limits: { memory: 128Mi }

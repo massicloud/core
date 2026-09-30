@@ -15,14 +15,17 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/mikaminou/massicloud/api/internal/auth"
 	"github.com/mikaminou/massicloud/api/internal/backup"
 	"github.com/mikaminou/massicloud/api/internal/config"
+	"github.com/mikaminou/massicloud/api/internal/email"
 	"github.com/mikaminou/massicloud/api/internal/handlers"
 	"github.com/mikaminou/massicloud/api/internal/initschemas"
 	"github.com/mikaminou/massicloud/api/internal/k8s"
+	"github.com/mikaminou/massicloud/api/internal/metrics"
 	"github.com/mikaminou/massicloud/api/internal/middleware"
 	"github.com/mikaminou/massicloud/api/internal/proxy"
 	"github.com/mikaminou/massicloud/api/internal/ratelimit"
@@ -118,6 +121,7 @@ func main() {
 			slog.Error("invalid REDIS_URL, rate limiter will run in-memory-only", "error", err)
 		} else {
 			redisClient = redis.NewClient(opt)
+			redisClient.AddHook(metrics.RedisHook{})
 		}
 	}
 	rateLimiter := ratelimit.NewHybrid(redisClient, logger)
@@ -125,6 +129,7 @@ func main() {
 
 	// Router
 	r := chi.NewRouter()
+	r.Use(metrics.HTTP)
 	r.Use(middleware.RequestLogger)
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
@@ -173,14 +178,36 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	// Transactional email. A missing RESEND_API_KEY is not fatal: the API
+	// starts with sending disabled and every reset attempt logs an error.
+	var emailSender email.Sender
+	if cfg.ResendAPIKey == "" {
+		slog.Warn("RESEND_API_KEY is not set; email sending is disabled (password reset emails will not be delivered)")
+		emailSender = email.NewDisabledSender()
+	} else {
+		emailSender, err = email.NewResendSender(cfg.ResendAPIKey, cfg.EmailFrom, logger)
+		if err != nil {
+			slog.Error("failed to initialize email sender", "error", err)
+			os.Exit(1)
+		}
+	}
+
 	// Handlers
-	h := handlers.New(k8sClient, logger, cfg, db, authSvc, storageClient, initSvc, backupSvc, dbProxy)
+	h := handlers.New(k8sClient, logger, cfg, db, authSvc, storageClient, initSvc, backupSvc, dbProxy, emailSender)
 
 	// Public routes — no auth required
 	r.Get("/health", h.Health)
 	r.Post("/auth/login", h.Login)
 	r.Get("/storage/download", h.DownloadViaToken)
 	r.Post("/auth/register", h.Register)
+
+	// Platform-user password reset (unauthenticated). No API key exists on
+	// these requests, so the auth-category limit is applied per client IP.
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireCategoryByIP(rateLimiter, ratelimit.CategoryAuth))
+		r.Post("/auth/reset-password", h.RequestPlatformPasswordReset)
+		r.Post("/auth/reset-password/confirm", h.ConfirmPlatformPasswordReset)
+	})
 
 	// Schema presets — no auth required
 	r.Get("/schema-presets", h.ListPresets)
@@ -440,6 +467,27 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// Prometheus metrics on a separate port so /metrics is never exposed via
+	// the public ingress (the Service/Ingress only route to APIPort).
+	metricsCtx, metricsCancel := context.WithCancel(context.Background())
+	defer metricsCancel()
+	go metrics.RunCollector(metricsCtx, db, time.Minute, func(err error) {
+		slog.Warn("metrics: refresh project info failed", "error", err)
+	})
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.HandlerFor(metrics.Registry, promhttp.HandlerOpts{}))
+	metricsSrv := &http.Server{
+		Addr:              ":" + cfg.MetricsPort,
+		Handler:           metricsMux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	go func() {
+		slog.Info("metrics server starting", "port", cfg.MetricsPort)
+		if err := metricsSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("metrics server error", "error", err)
+		}
+	}()
+
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -467,6 +515,8 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		slog.Error("forced shutdown", "error", err)
 	}
+	metricsCancel()
+	_ = metricsSrv.Shutdown(shutdownCtx)
 
 	slog.Info("massicloud api stopped")
 }

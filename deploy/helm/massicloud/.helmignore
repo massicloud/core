@@ -10,3 +10,5 @@
 .vscode/
 values-live.yaml
 values-*-live.yaml
+values-qa-secrets.yaml
+values-*-secrets.yaml

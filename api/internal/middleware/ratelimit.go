@@ -2,9 +2,12 @@ package middleware
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/mikaminou/massicloud/api/internal/metrics"
 	"github.com/mikaminou/massicloud/api/internal/ratelimit"
 )
 
@@ -31,31 +34,57 @@ func RequireCategory(limiter ratelimit.Limiter, cat ratelimit.Category) func(htt
 				return
 			}
 
-			result, err := limiter.Allow(r.Context(), cat, apiKey)
-			if err != nil {
-				// Both the Redis and in-memory backends failed — the latter
-				// never errors in practice, so this is effectively
-				// unreachable. Fail open rather than take the API down over
-				// a rate-limiter bug.
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			if !result.Allowed {
-				w.Header().Set("Retry-After", strconv.Itoa(result.RetryAfter))
-				w.Header().Set("X-RateLimit-Limit", strconv.FormatFloat(result.Limit, 'f', 0, 64))
-				w.Header().Set("X-RateLimit-Category", string(cat))
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusTooManyRequests)
-				json.NewEncoder(w).Encode(map[string]interface{}{
-					"error":               "rate_limit_exceeded",
-					"category":            string(cat),
-					"retry_after_seconds": result.RetryAfter,
-				})
-				return
-			}
-
-			next.ServeHTTP(w, r)
+			writeIfLimited(w, r, limiter, cat, apiKey, next)
 		})
 	}
+}
+
+// RequireCategoryByIP is RequireCategory for unauthenticated platform routes
+// (e.g. /auth/reset-password) that carry no API key: the bucket is keyed by
+// client IP instead. Relies on chimiddleware.RealIP having set r.RemoteAddr.
+func RequireCategoryByIP(limiter ratelimit.Limiter, cat ratelimit.Category) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			host, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				host = r.RemoteAddr
+			}
+			writeIfLimited(w, r, limiter, cat, "ip:"+host, next)
+		})
+	}
+}
+
+// writeIfLimited runs the limiter for key and either serves next or writes
+// the 429 response.
+func writeIfLimited(w http.ResponseWriter, r *http.Request, limiter ratelimit.Limiter, cat ratelimit.Category, key string, next http.Handler) {
+	result, err := limiter.Allow(r.Context(), cat, key)
+	if err != nil {
+		// Both the Redis and in-memory backends failed — the latter
+		// never errors in practice, so this is effectively
+		// unreachable. Fail open rather than take the API down over
+		// a rate-limiter bug.
+		next.ServeHTTP(w, r)
+		return
+	}
+
+	if !result.Allowed {
+		prefix := "ip"
+		if !strings.HasPrefix(key, "ip:") {
+			prefix = metrics.KeyPrefix(key)
+		}
+		metrics.RateLimitDenials.WithLabelValues(string(cat), prefix).Inc()
+		w.Header().Set("Retry-After", strconv.Itoa(result.RetryAfter))
+		w.Header().Set("X-RateLimit-Limit", strconv.FormatFloat(result.Limit, 'f', 0, 64))
+		w.Header().Set("X-RateLimit-Category", string(cat))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusTooManyRequests)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error":               "rate_limit_exceeded",
+			"category":            string(cat),
+			"retry_after_seconds": result.RetryAfter,
+		})
+		return
+	}
+
+	next.ServeHTTP(w, r)
 }

@@ -1,0 +1,110 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: massicloud-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: massicloud-monitoring
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: massicloud.recording
+      rules:
+        # Maps tenant namespace (tenant-{project_id}) -> project_slug so
+        # dashboards can join per-namespace metrics onto slugs.
+        - record: massicloud:project_namespace_info
+          expr: label_replace(massicloud_project_info, "namespace", "tenant-$1", "project_id", "(.+)")
+
+    - name: massicloud.alerts
+      rules:
+        - alert: ApiDown
+          expr: up{job="massicloud-api"} == 0
+          for: 2m
+          labels: { severity: critical }
+          annotations:
+            summary: MassiCloud API is down
+            description: "MassiCloud API has been unreachable for 2 minutes"
+
+        - alert: ApiErrorRateHigh
+          expr: |
+            sum by (job) (rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum by (job) (rate(http_requests_total[5m])) > 0.05
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: API 5xx rate above 5%
+            description: "API error rate above 5% for 5 minutes"
+
+        - alert: ApiLatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket[10m]))
+            ) > 2
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: API P95 latency above 2s
+            description: "API P95 latency above 2 seconds for 10 minutes"
+
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[10m]) > 0
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: Pod restarting
+            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting"
+
+        - alert: DiskSpaceHigh
+          expr: |
+            100 * (
+              kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes
+            ) > 85
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: PVC over 85% full
+            description: "PVC {{ $labels.persistentvolumeclaim }} is over 85% full"
+
+        - alert: CertificateExpiringSoon
+          expr: certmanager_certificate_expiration_timestamp_seconds - time() < 14 * 24 * 3600
+          for: 1h
+          labels: { severity: warning }
+          annotations:
+            summary: Certificate expiring
+            description: "Certificate {{ $labels.name }} expires in less than 14 days"
+
+        - alert: PostgresConnectionsHigh
+          # pg_stat_activity_count is emitted natively by postgres_exporter
+          # v0.15.0 (per datname/state). max_connections is not exported, so
+          # this uses a fixed threshold below the default max of 100 — adjust
+          # if a tenant runs a different max_connections.
+          expr: |
+            sum by (namespace, instance) (
+              pg_stat_activity_count{state="active"}
+            ) > 80
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: Postgres has many active connections
+            description: "Postgres in {{ $labels.namespace }} has more than 80 active connections"
+
+        - alert: MinIOStorageHigh
+          expr: |
+            (
+              minio_cluster_capacity_usable_free_bytes
+              / minio_cluster_capacity_usable_total_bytes
+            ) < 0.2
+          for: 15m
+          labels: { severity: warning }
+          annotations:
+            summary: MinIO free space low
+            description: "MinIO free storage below 20%"
+
+        - alert: RedisDown
+          expr: up{job="redis"} == 0 or redis_up == 0
+          for: 2m
+          labels: { severity: critical }
+          annotations:
+            summary: Redis is down
+            description: "Redis unreachable"

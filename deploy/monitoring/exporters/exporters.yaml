@@ -1,0 +1,108 @@
+# Standalone exporters for the platform Postgres and Redis. Deployed in
+# massicloud-system (NOT part of the massicloud Helm chart, so the chart
+# stays untouched) so they can read the existing platform-postgres-creds and
+# platform-redis-creds Secrets directly — Secrets can't be referenced across
+# namespaces. Apply with: kubectl apply -f deploy/monitoring/exporters/exporters.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-postgres-exporter-queries
+  namespace: massicloud-system
+data:
+  queries.yaml: |
+    # postgres_exporter >= 0.15 no longer ships these two by default.
+    pg_stat_activity:
+      query: "SELECT datname, state, count(*) AS count FROM pg_stat_activity WHERE datname IS NOT NULL GROUP BY datname, state"
+      metrics:
+        - datname: { usage: LABEL, description: Database name }
+        - state: { usage: LABEL, description: Backend state }
+        - count: { usage: GAUGE, description: Number of backends }
+    pg_settings:
+      query: "SELECT setting::float AS max_connections FROM pg_settings WHERE name = 'max_connections'"
+      metrics:
+        - max_connections: { usage: GAUGE, description: max_connections setting }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-postgres-exporter
+  namespace: massicloud-system
+  labels: { app: platform-postgres-exporter }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: platform-postgres-exporter }
+  template:
+    metadata:
+      labels: { app: platform-postgres-exporter }
+    spec:
+      containers:
+        - name: exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+          args: ["--extend.query-path=/queries/queries.yaml"]
+          ports:
+            - { name: metrics, containerPort: 9187 }
+          env:
+            - { name: DATA_SOURCE_URI, value: "platform-postgres:5432/massicloud?sslmode=disable" }
+            - { name: DATA_SOURCE_USER, value: massicloud }
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef: { name: platform-postgres-creds, key: POSTGRES_PASSWORD }
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 96Mi }
+          volumeMounts:
+            - { name: queries, mountPath: /queries }
+      volumes:
+        - name: queries
+          configMap: { name: platform-postgres-exporter-queries }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-postgres-exporter
+  namespace: massicloud-system
+  labels: { app: platform-postgres-exporter }
+spec:
+  selector: { app: platform-postgres-exporter }
+  ports:
+    - { name: metrics, port: 9187, targetPort: metrics }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-redis-exporter
+  namespace: massicloud-system
+  labels: { app: platform-redis-exporter }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: platform-redis-exporter }
+  template:
+    metadata:
+      labels: { app: platform-redis-exporter }
+    spec:
+      containers:
+        - name: exporter
+          image: oliver006/redis_exporter:v1.62.0
+          ports:
+            - { name: metrics, containerPort: 9121 }
+          env:
+            - { name: REDIS_ADDR, value: "redis://platform-redis:6379" }
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: platform-redis-creds, key: REDIS_PASSWORD }
+          resources:
+            requests: { cpu: 10m, memory: 24Mi }
+            limits: { memory: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-redis-exporter
+  namespace: massicloud-system
+  labels: { app: platform-redis-exporter }
+spec:
+  selector: { app: platform-redis-exporter }
+  ports:
+    - { name: metrics, port: 9121, targetPort: metrics }

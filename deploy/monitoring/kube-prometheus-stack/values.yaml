@@ -1,0 +1,177 @@
+# kube-prometheus-stack values for the QA cluster (Contabo k3s, single node).
+# Live Algeria will need its own copy (retention, PVC sizes, hostnames).
+# Nothing secret lives here: the Grafana admin password comes from the
+# `grafana-admin` Secret and the Resend key from the `resend-creds` Secret,
+# both created by the operator in the monitoring namespace (see ../README.md).
+
+fullnameOverride: kube-prometheus-stack
+
+# k3s runs the control plane inside one process and does not expose the
+# controller-manager / scheduler / proxy / etcd metrics endpoints the way
+# kubeadm does. Leaving these on would raise permanent *Down alerts.
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeProxy: { enabled: false }
+kubeEtcd: { enabled: false }
+
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    retentionSize: 3GB        # hard cap below the 5Gi PVC so the WAL/compaction never fills it
+    # Pick up every ServiceMonitor/PodMonitor/PrometheusRule in the cluster,
+    # not only ones labelled with this Helm release (our monitors live in
+    # deploy/monitoring/kube-prometheus-stack/*.yaml and are applied with kubectl).
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 200m, memory: 512Mi }
+      limits: { memory: 1Gi }
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+    # The API's /metrics is on a separate container port (METRICS_PORT, 9090)
+    # that the Deployment does not declare as a containerPort, so a
+    # PodMonitor can't select it. Scrape it by pod IP instead — explicit
+    # namespace + label selector, no wildcards. job is set to massicloud-api
+    # so alerts and dashboards can use up{job="massicloud-api"}.
+    additionalScrapeConfigs:
+      - job_name: massicloud-api
+        metrics_path: /metrics
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [massicloud-system]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: massicloud-api
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_phase]
+            regex: Running
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_ip]
+            replacement: $1:9090
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+alertmanager:
+  alertmanagerSpec:
+    # Mounted at /etc/alertmanager/secrets/resend-creds/api-key. The Secret
+    # must exist in THIS namespace (see README: copy it from massicloud-system).
+    secrets:
+      - resend-creds
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits: { memory: 128Mi }
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+  config:
+    global:
+      resolve_timeout: 5m
+      smtp_from: "MassiCloud Alerts <noreply@massidigits.com>"
+      smtp_smarthost: "smtp.resend.com:465"   # port 465 = implicit TLS
+      smtp_auth_username: resend
+      smtp_auth_password_file: /etc/alertmanager/secrets/resend-creds/api-key
+      smtp_require_tls: true
+    route:
+      receiver: tester1
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      routes:
+        # Watchdog fires forever by design (dead-man's switch); don't email it.
+        - matchers: ['alertname =~ "Watchdog|InfoInhibitor"']
+          receiver: "null"
+        - matchers: ["severity = critical"]
+          receiver: tester1
+          repeat_interval: 1h
+    inhibit_rules:
+      - source_matchers: ["severity = critical"]
+        target_matchers: ["severity =~ warning|info"]
+        equal: ["namespace", "alertname"]
+    receivers:
+      - name: "null"
+      - name: tester1
+        email_configs:
+          - to: tester1@massidigits.com
+            send_resolved: true
+
+grafana:
+  # Built-in Grafana auth (no basic-auth middleware). The Secret needs BOTH
+  # keys: admin-user and admin-password (chart reads both from it).
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 1Gi
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 384Mi }
+  grafana.ini:
+    server:
+      root_url: https://grafana.massicloud.work
+      serve_from_sub_path: false
+    users:
+      allow_sign_up: false
+    auth.anonymous:
+      enabled: false
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod   # same issuer as the massicloud chart's ingresses
+    hosts:
+      - grafana.massicloud.work
+    path: /
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.massicloud.work
+  # Dashboards are ConfigMaps labelled grafana_dashboard=1 (created by
+  # ../install-dashboards.sh from dashboards/*.json); the sidecar loads them.
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: monitoring
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: false
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.monitoring.svc.cluster.local:3100
+      isDefault: false
+
+kube-state-metrics:
+  enabled: true
+nodeExporter:
+  enabled: true
+
+prometheus-node-exporter:
+  service:
+    port: 9101
+    targetPort: 9101
+  hostPort: 9101

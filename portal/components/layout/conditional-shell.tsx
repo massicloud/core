@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import { AppShellNew } from "./app-shell-new"
 
-const PUBLIC_ROUTES = ["/login", "/register"]
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset"]
 
 interface ConditionalShellProps {
   children: ReactNode

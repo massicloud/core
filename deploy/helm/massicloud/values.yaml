@@ -1,6 +1,10 @@
+# QA defaults (Contabo k3s cluster, massicloud.work) — this is the file every
+# day-to-day deploy uses. Live Algeria overrides live in values-algeria.yaml.
+# Real QA secrets are layered from the gitignored values-qa-secrets.yaml.
+
 # Domain configuration
 domain:
-  base: massicloud.work        # apex domain (test env)
+  base: massicloud.work        # apex domain (QA)
   # Subdomains inherit from base
   # api.<base>, app.<base>, docs.<base>, <base>
 
@@ -8,11 +12,11 @@ domain:
 images:
   api:
     repository: ghcr.io/massicloud/massicloud-api
-    tag: "0.3.4"
+    tag: "0.3.8"
     pullPolicy: IfNotPresent
   portal:
     repository: ghcr.io/massicloud/massicloud-portal
-    tag: "0.1.7"
+    tag: "0.1.8"
     pullPolicy: IfNotPresent
   landing:
     repository: ghcr.io/massicloud/massicloud-landing
@@ -119,3 +123,10 @@ ingress:
 
 # Storage class (k3s default)
 storageClass: local-path
+
+# Transactional email for QA cluster (Contabo). Live Algeria overrides these
+# in values-algeria.yaml. The Resend API key is in the operator-created
+# resend-creds Secret, not here.
+email:
+  from: "MassiCloud <noreply@massidigits.com>"
+  portalURL: "https://app.massicloud.work"

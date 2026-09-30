@@ -1,0 +1,128 @@
+# ServiceMonitors / PodMonitors for everything except the MassiCloud API
+# (that one is an additionalScrapeConfig in values.yaml — see the comment
+# there). All live in the monitoring namespace; selectors are explicit
+# (namespace + specific labels), never wildcards.
+#
+# Apply AFTER the kube-prometheus-stack release (CRDs must exist):
+#   kubectl apply -f deploy/monitoring/kube-prometheus-stack/scrape-targets.yaml
+---
+# MinIO cluster metrics. MinIO requires a bearer token for /minio/v2/metrics
+# unless MINIO_PROMETHEUS_AUTH_TYPE=public is set (not touching the main
+# chart for that). Operator creates the token Secret, see README.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: minio
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { matchNames: [massicloud-system] }
+  selector:
+    matchLabels: { app: minio }
+  jobLabel: app
+  endpoints:
+    - port: api
+      path: /minio/v2/metrics/cluster
+      interval: 60s
+      bearerTokenSecret:
+        name: minio-prometheus-token
+        key: token
+      relabelings:
+        - targetLabel: job
+          replacement: minio
+---
+# platform-postgres (control plane), via the standalone exporter in
+# ../exporters/exporters.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: platform-postgres-exporter
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { matchNames: [massicloud-system] }
+  selector:
+    matchLabels: { app: platform-postgres-exporter }
+  endpoints:
+    - port: metrics
+      interval: 30s
+      relabelings:
+        - targetLabel: job
+          replacement: platform-postgres
+---
+# platform-redis, via the standalone exporter. job=redis matches RedisDown.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: platform-redis-exporter
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { matchNames: [massicloud-system] }
+  selector:
+    matchLabels: { app: platform-redis-exporter }
+  endpoints:
+    - port: metrics
+      interval: 30s
+      relabelings:
+        - targetLabel: job
+          replacement: redis
+---
+# Tenant Postgres instances. Scrapes the `metrics` port of tenant postgres
+# pods once they carry a postgres_exporter sidecar (README: "Tenant Postgres
+# exporter"). Until then this matches nothing, which is harmless.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: tenant-postgres
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { any: true }   # tenant-* namespaces are created dynamically
+  selector:
+    matchLabels: { component: postgres }
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s
+      relabelings:
+        - targetLabel: job
+          replacement: tenant-postgres
+---
+# Traefik (k3s-bundled). Assumes the standard k3s Traefik pod exposing a
+# container port named "metrics" (:9100). Verify with:
+#   kubectl -n kube-system get pod -l app.kubernetes.io/name=traefik -o jsonpath='{.items[0].spec.containers[0].ports}'
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: traefik
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { matchNames: [kube-system] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: traefik }
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      relabelings:
+        - targetLabel: job
+          replacement: traefik
+---
+# cert-manager controller (metrics on :9402, port name http-metrics).
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: cert-manager
+  namespace: monitoring
+  labels: { app.kubernetes.io/part-of: massicloud-monitoring }
+spec:
+  namespaceSelector: { matchNames: [cert-manager] }
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/component: controller
+  podMetricsEndpoints:
+    - port: http-metrics
+      relabelings:
+        - targetLabel: job
+          replacement: cert-manager

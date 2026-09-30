@@ -136,6 +136,15 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="flex justify-end -mt-1">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-[#A1A1AA] hover:text-white transition-colors underline underline-offset-2"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             {/* Remember me */}
             <label className="flex items-center gap-2.5 cursor-pointer group select-none">
               <div

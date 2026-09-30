@@ -41,6 +41,37 @@ detail to pick up and fix later. This file covers the platform (`api/`,
 
 ## Fixed
 
+### postgres_exporter custom queries made `/metrics` return 500 — fixed 2026-09-30
+
+- **Symptom:** the tenant Postgres `pg-exporter` sidecar's `/metrics` returned
+  HTTP 500, so its readiness probe failed and new tenants' Postgres pods never
+  became Ready.
+- **Cause:** the custom `queries.yaml` (ConfigMap `postgres-exporter-queries`,
+  mounted at `/queries`, loaded via `--extend.query-path`) is broken under
+  `postgres_exporter` v0.15.0. It was only there for `pg_stat_activity_count`,
+  which v0.15.0 emits natively.
+- **Fix:** removed the queries constant/ConfigMap creation, volume, volume mount
+  and `--extend.query-path` arg from `api/internal/k8s/postgres.go` and
+  `deploy/scripts/upgrade-tenant-postgres.sh`. `PostgresConnectionsHigh` now
+  alerts on `pg_stat_activity_count{state="active"} > 80` since
+  `pg_settings_max_connections` was only ever produced by that file.
+- **Existing tenants:** the two already-provisioned tenants were manually
+  patched (arg removed, extension created) and match the new default; no action
+  needed. Any leftover `postgres-exporter-queries` ConfigMaps are unused.
+
+### Tenant Postgres had no metrics exporter and pg_stat_statements was off — fixed 2026-09-30
+
+- **What shipped:** new tenant Postgres StatefulSets (`api/internal/k8s/postgres.go`,
+  API 0.3.7+) run a pinned `postgres_exporter` sidecar (`:9187`, port `metrics`),
+  start Postgres with `pg_stat_statements` preloaded, and create the extension in
+  `template1` + `postgres` after startup. `allow-prometheus-scrape` NetworkPolicy
+  added alongside `isolate-tenant` (which otherwise blocks scrapes from the
+  `monitoring` namespace). Scraped by the existing `tenant-postgres` PodMonitor.
+- **Existing tenants:** need the one-time `deploy/scripts/upgrade-tenant-postgres.sh`
+  (restarts each tenant's Postgres pod).
+- **Not covered:** extensions in databases created outside `template1` inheritance
+  (e.g. restored dumps) must be created manually.
+
 ### No platform-wide rate limiting on end-user endpoints — added 2026-09-29
 
 - **What shipped:** every end-user (project API key gated) endpoint under

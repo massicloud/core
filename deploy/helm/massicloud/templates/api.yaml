@@ -105,6 +105,18 @@ spec:
           value: {{ .Values.backingImages.postgrest | quote }}
         - name: MONGO_IMAGE
           value: {{ .Values.backingImages.mongo | quote }}
+        # Platform password reset email (Resend). The key is optional: the
+        # API starts with email disabled if the Secret has no/empty key.
+        - name: EMAIL_FROM
+          value: {{ .Values.email.from | quote }}
+        - name: PORTAL_URL
+          value: {{ .Values.email.portalURL | quote }}
+        - name: RESEND_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: resend-creds
+              key: api-key
+              optional: true
         resources:
 {{ toYaml .Values.api.resources | indent 10 }}
         readinessProbe:
